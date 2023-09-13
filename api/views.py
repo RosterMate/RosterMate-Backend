@@ -12,7 +12,7 @@ def user_login(request):
 
     client = MongoClient(uri)
     db = client.RosterMateDB
-    rmusers_collection = db['RMusers']
+    rmusers_collection = db['UserAuth']
     rmusers_data = list(rmusers_collection.find({}))
     client.close()
     for user in rmusers_data:
