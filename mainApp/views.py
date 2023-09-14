@@ -72,7 +72,7 @@ def view_profile(request):
         profile_details_collection = db['User-Doctor']
     elif request.data['type'] == "Consultant":
         profile_details_collection = db['User-Consultant']
-        
+
     projection = {'img': 1,
     'name': 1,
     'position': 1,
@@ -87,3 +87,11 @@ def view_profile(request):
         return Response(profile_details)
     else:
         return JsonResponse(None)
+    
+
+@api_view(['POST'])
+def addWard(request):
+
+    print("Data from frontend -",request.data)
+
+    return Response(None)
