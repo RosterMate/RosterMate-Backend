@@ -20,5 +20,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     #path('RosterMateApp/', include('RosterMateApp.urls')),
     path('api/', include('api.urls')),
+    path('mainApp/', include('mainApp.urls')),
 
 ]
