@@ -58,4 +58,32 @@ def consultantDetails(request):
     if consultant_details:
         return Response(consultant_details)
     else:
+        return JsonResponse(None) 
+    
+@api_view(['POST'])
+def view_profile(request):
+
+    #print("Data from frontend -",request.data)
+    client = MongoClient(uri)
+    db = client.RosterMateDB
+    if request.data['type'] == "Admin":
+        profile_details_collection = db['User-Admin']
+    elif request.data['type'] == "Doctor":
+        profile_details_collection = db['User-Doctor']
+    elif request.data['type'] == "Consultant":
+        profile_details_collection = db['User-Consultant']
+        
+    projection = {'img': 1,
+    'name': 1,
+    'position': 1,
+    'address': 1,
+    'information': 1,
+    'mobile': 1,}
+    profile_details = [{'name': i['name'], 'position': i['position'],'img':i['img'],'address':i['address'],'information':i['information'],'mobile':i['mobile']} for i in profile_details_collection.find({'email':request.data['email']}, projection)][0]
+
+    client.close()
+    #print(profile_details)
+    if profile_details:
+        return Response(profile_details)
+    else:
         return JsonResponse(None)
