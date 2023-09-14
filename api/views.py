@@ -8,29 +8,25 @@ uri = "mongodb+srv://thejanbweerasekara:atYiYnBqom0ZrQXt@rostermatedb.n9yfrig.mo
 @api_view(['POST'])
 def user_login(request):
 
-    #print("Data from frontend -", request.data['email'], request.data['password'])
+    print("Data from frontend -", request.data['email'], request.data['password'])
 
     client = MongoClient(uri)
     db = client.RosterMateDB
-    rmusers_collection = db['UserAuth']
-    rmusers_data = list(rmusers_collection.find({}))
+    collection = db['UserAuth']
+    user = list(collection.find({"email": request.data['email']}))
+    user = user[0]
     client.close()
-    for user in rmusers_data:
-        #print("TEST ",user['email'],request.data['email'],)
-        if user['email'] == request.data['email']:
-            if user['password'] != request.data['password']:
-                break
-            data = {
-                'isAuthenticated': True,
-                'USERTYPE': user['type'],
-                'NAME': user['name'],
-            }
-            return Response(data)
 
-    #print(rmusers_data)
-    data = {
-        'isAuthenticated': False,
-        'USERTYPE': 'Public',
-    }
-
-    return Response(data)
+    if user['password'] == request.data['password'] and user['email'] == request.data['email']:
+        data = {
+            'isAuthenticated': True,
+            'USERTYPE': user['type'],
+            'NAME': user['name'],
+        }
+        return Response(data)
+    else:
+        data = {
+            'isAuthenticated': False,
+            'USERTYPE': 'Public',
+        }
+        return Response(data)
