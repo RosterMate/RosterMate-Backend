@@ -3,6 +3,8 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from pymongo import MongoClient
 from django.http import JsonResponse
+from .models import LeaveRequests_collection
+from bson import ObjectId
 
 uri = "mongodb+srv://thejanbweerasekara:atYiYnBqom0ZrQXt@rostermatedb.n9yfrig.mongodb.net/"
 
@@ -95,3 +97,30 @@ def addWard(request):
     print("Data from frontend -",request.data)
 
     return Response(None)
+
+
+@api_view(['POST'])
+def leaveRequests(request):
+    # Define the query conditions for each Status
+    query_conditions = [
+        {'Status': "NoResponse"},
+        {'Status': "Accepted"},
+        {'Status': "Rejected"},
+    ]
+
+    leaveReq_details = []
+
+    for condition in query_conditions:
+        # Use list comprehension to convert ObjectId to string
+        documents = list(LeaveRequests_collection.find(condition))
+        converted_documents = [
+            {k: str(v) if isinstance(v, ObjectId) else v for k, v in doc.items()} 
+            for doc in documents
+        ]
+        leaveReq_details.append(converted_documents)
+        leaveReq_flattened_list = [item for sublist in leaveReq_details for item in (sublist if isinstance(sublist, list) else [sublist])]
+
+    if any(leaveReq_flattened_list):
+        return Response(leaveReq_flattened_list)
+    else:
+        return JsonResponse(None)

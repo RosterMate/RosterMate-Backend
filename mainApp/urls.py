@@ -8,5 +8,7 @@ urlpatterns = [
     path('consultantDetails', views.consultantDetails, name='consultantDetails'),
     path('view_profile', views.view_profile, name='view_profile'),
     path('addWard', views.addWard, name='addWard'),
+    path('leaveReqDetails', views.leaveRequests, name='leaveReqDetails'),
+
 
 ]
