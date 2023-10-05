@@ -9,6 +9,7 @@ urlpatterns = [
     path('view_profile', views.view_profile, name='view_profile'),
     path('addWard', views.addWard, name='addWard'),
     path('leaveReqDetails', views.leaveRequests, name='leaveReqDetails'),
-
+    path('view_All_Users', views.view_all_users, name='view_All_Users'),
+    path('addWard', views.addWard, name='addWard'),
 
 ]

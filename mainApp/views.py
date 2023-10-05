@@ -3,8 +3,13 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from pymongo import MongoClient
 from django.http import JsonResponse
-from .models import LeaveRequests_collection
 from bson import ObjectId
+
+from .models import LeaveRequests_collection
+from .models import UserDoctor_collection
+from .models import UserConsultant_collection
+from .models import WardDetail_collection
+
 
 uri = "mongodb+srv://thejanbweerasekara:atYiYnBqom0ZrQXt@rostermatedb.n9yfrig.mongodb.net/"
 
@@ -65,7 +70,7 @@ def consultantDetails(request):
 @api_view(['POST'])
 def view_profile(request):
 
-    #print("Data from frontend -",request.data)
+    print("Data from frontend -",request.data)
     client = MongoClient(uri)
     db = client.RosterMateDB
     if request.data['type'] == "Admin":
@@ -107,12 +112,18 @@ def leaveRequests(request):
         {'Status': "Accepted"},
         {'Status': "Rejected"},
     ]
+    if request.data['type'] == "Consultant":
+        consultant_collection = UserConsultant_collection
 
+    current_consultant = consultant_collection.find_one({'email': request.data['email']})
+    if current_consultant:
+        ward_numbers = [current_consultant.get('wardNumber', [])]
+    
     leaveReq_details = []
-
+    
     for condition in query_conditions:
         # Use list comprehension to convert ObjectId to string
-        documents = list(LeaveRequests_collection.find(condition))
+        documents = list(LeaveRequests_collection.find({'wardNumber': {'$in': ward_numbers}, **condition}))
         converted_documents = [
             {k: str(v) if isinstance(v, ObjectId) else v for k, v in doc.items()} 
             for doc in documents
@@ -123,4 +134,49 @@ def leaveRequests(request):
     if any(leaveReq_flattened_list):
         return Response(leaveReq_flattened_list)
     else:
-        return JsonResponse(None)
+        return JsonResponse(None, safe=False)
+    
+
+
+@api_view(['POST'])
+def view_all_users(request):
+    user_type = request.data.get('type')
+    email = request.data.get('email')
+
+    if user_type == "Consultant":
+        consultant = UserConsultant_collection.find_one({'email': email})
+        
+        if consultant:
+            ward_number = consultant.get('wardNumber')
+            doctors_in_wards = list(UserDoctor_collection.find({'wardNumber': ward_number}, projection={'_id': 0, 'img': 1, 'name': 1, 'position': 1}))
+            
+            if doctors_in_wards:
+                return Response(doctors_in_wards)
+            else:
+                return JsonResponse({'message': 'No doctors found in the same ward'}, status=404)
+        else:
+            return JsonResponse({'message': 'Consultant not found'}, status=404)
+    
+    return JsonResponse({'message': 'Invalid user type'}, status=400)
+
+@api_view(['POST'])
+def addWard(request):
+    wardName = request.data.get('wardname')
+    wardNumber = request.data.get('wardnumber')
+    Shifts = int(request.data.get('shifts'))
+    MaxLeaves = int(request.data.get('maxleaves'))
+    ConsecutiveShifts = int(request.data.get('consecutiveshifts'))
+    NoOfDoctors = int(request.data.get('maxnumberdoctors'))
+
+    # print((wardName,wardNumber,Shifts,MaxLeaves,ConsecutiveShifts,NoOfDoctors))
+    ward_data = {
+        'wardName': wardName,
+        'wardNumber': wardNumber,
+        'Shifts': Shifts,
+        'ConsecutiveShifts': ConsecutiveShifts,
+        'NoOfDoctors': NoOfDoctors,
+        'MaxLeaves': MaxLeaves
+    }
+
+    WardDetail_collection.insert_one(ward_data)
+    return Response({'message': 'Ward added successfully'})
