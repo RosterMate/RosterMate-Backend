@@ -9,6 +9,7 @@ from .models import LeaveRequests_collection
 from .models import UserDoctor_collection
 from .models import UserConsultant_collection
 from .models import WardDetail_collection
+from .models import UserAuth_collection
 
 
 uri = "mongodb+srv://thejanbweerasekara:atYiYnBqom0ZrQXt@rostermatedb.n9yfrig.mongodb.net/"
@@ -97,14 +98,6 @@ def view_profile(request):
     
 
 @api_view(['POST'])
-def addWard(request):
-
-    print("Data from frontend -",request.data)
-
-    return Response(None)
-
-
-@api_view(['POST'])
 def leaveRequests(request):
     # Define the query conditions for each Status
     query_conditions = [
@@ -180,3 +173,50 @@ def addWard(request):
 
     WardDetail_collection.insert_one(ward_data)
     return Response({'message': 'Ward added successfully'})
+
+@api_view(['POST'])
+def sendWardDetails(request):
+    projection = {'wardName': 1, 'wardNumber': 1}
+    ward_details = [{'wardName': i['wardName'], 'wardNumber': i['wardNumber']} for i in WardDetail_collection.find({}, projection)]
+    if ward_details:
+        return Response(ward_details)
+    else:
+        return JsonResponse(None)
+
+@api_view(['POST'])
+def addDoctor(request):
+    fullName = request.data.get('fullname')
+    mobileNo = request.data.get('mobileNo')
+    email = (request.data.get('email'))
+    password = (request.data.get('password'))
+    address = (request.data.get('address'))
+    position = (request.data.get('position'))
+    degree = (request.data.get('degree'))
+    specialization = (request.data.get('specialization'))
+    wardNumber = (request.data.get('wardnumber'))
+
+    # print((wardName,wardNumber,Shifts,MaxLeaves,ConsecutiveShifts,NoOfDoctors))
+    doctor_data = {
+        'email': email,
+        'position': position,
+        'name': fullName,
+        'mobile': mobileNo,
+        'address': address,
+        'img':'',
+        'wardNumber': wardNumber,
+        'Degree':degree,
+        'Specialization':specialization,
+    }
+    print(doctor_data)
+
+    UserAuth_Doctor = {
+        'email':email,
+        'password': password,
+        'type': 'Doctor',
+        'name': fullName,
+    }
+    print(UserAuth_Doctor)
+
+    UserDoctor_collection.insert_one(doctor_data)
+    UserAuth_collection.insert_one(UserAuth_Doctor)
+    return Response({'message': 'Doctor added successfully'})

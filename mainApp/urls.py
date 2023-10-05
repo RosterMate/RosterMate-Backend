@@ -11,5 +11,7 @@ urlpatterns = [
     path('leaveReqDetails', views.leaveRequests, name='leaveReqDetails'),
     path('view_All_Users', views.view_all_users, name='view_All_Users'),
     path('addWard', views.addWard, name='addWard'),
+    path('sendWardDetails', views.sendWardDetails, name='sendWardDetails'),
+    path('addDoctor', views.addDoctor, name='addDoctor'),
 
 ]
