@@ -6,10 +6,10 @@ client = pymongo.MongoClient(uri)
 
 db = client['RosterMateDB']
 
-collection = db['User-Doctor']
+collection = db['User-Consultant']
 
 new_field_name = 'Specialization'
-new_field_value= 'Orthopedics'
+new_field_value= 'Orthopaedic'
 
 for document in collection.find({}):
     document[new_field_name] = new_field_value

@@ -6,7 +6,7 @@ client = pymongo.MongoClient(uri)
 
 db = client['RosterMateDB']
 
-collection = db['User-Doctor']
+collection = db['User-Consultant']
 
 field_to_delete = 'information'
 

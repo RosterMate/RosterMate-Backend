@@ -220,3 +220,39 @@ def addDoctor(request):
     UserDoctor_collection.insert_one(doctor_data)
     UserAuth_collection.insert_one(UserAuth_Doctor)
     return Response({'message': 'Doctor added successfully'})
+
+@api_view(['POST'])
+def addConsultant(request):
+    fullName = request.data.get('fullname')
+    mobileNo = request.data.get('mobileNo')
+    email = (request.data.get('email'))
+    password = (request.data.get('password'))
+    address = (request.data.get('address'))
+    position = (request.data.get('position'))
+    degree = (request.data.get('degree'))
+    specialization = (request.data.get('specialization'))
+    wardNumber = (request.data.get('wardnumber'))
+
+    # print((wardName,wardNumber,Shifts,MaxLeaves,ConsecutiveShifts,NoOfDoctors))
+    consultant_data = {
+        'email': email,
+        'position': position,
+        'name': fullName,
+        'mobile': mobileNo,
+        'address': address,
+        'img':'',
+        'wardNumber': wardNumber,
+        'Degree':degree,
+        'Specialization':specialization,
+    }
+
+    UserAuth_Consultant = {
+        'email':email,
+        'password': password,
+        'type': 'Consultant',
+        'name': fullName,
+    }
+
+    UserConsultant_collection.insert_one(consultant_data)
+    UserAuth_collection.insert_one(UserAuth_Consultant)
+    return Response({'message': 'Consultant added successfully'})

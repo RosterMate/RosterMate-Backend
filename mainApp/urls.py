@@ -13,5 +13,6 @@ urlpatterns = [
     path('addWard', views.addWard, name='addWard'),
     path('sendWardDetails', views.sendWardDetails, name='sendWardDetails'),
     path('addDoctor', views.addDoctor, name='addDoctor'),
+    path('addConsultant', views.addConsultant, name='addConsultant'),
 
 ]
