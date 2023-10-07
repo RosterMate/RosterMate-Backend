@@ -8,5 +8,11 @@ urlpatterns = [
     path('consultantDetails', views.consultantDetails, name='consultantDetails'),
     path('view_profile', views.view_profile, name='view_profile'),
     path('addWard', views.addWard, name='addWard'),
+    path('leaveReqDetails', views.leaveRequests, name='leaveReqDetails'),
+    path('view_All_Users', views.view_all_users, name='view_All_Users'),
+    path('addWard', views.addWard, name='addWard'),
+    path('sendWardDetails', views.sendWardDetails, name='sendWardDetails'),
+    path('addDoctor', views.addDoctor, name='addDoctor'),
+    path('addConsultant', views.addConsultant, name='addConsultant'),
 
 ]
