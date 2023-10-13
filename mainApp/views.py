@@ -157,7 +157,7 @@ def addWard(request):
         'wardNumber': wardNumber,
         'Shifts': Shifts,
         'ConsecutiveShifts': ConsecutiveShifts,
-        'NoOfDoctors': NoOfDoctors,
+        'NoOfDoctors': 0,
         'MaxLeaves': MaxLeaves
     }
 
