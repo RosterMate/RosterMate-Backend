@@ -246,3 +246,44 @@ def addConsultant(request):
     UserConsultant_collection.insert_one(consultant_data)
     UserAuth_collection.insert_one(UserAuth_Consultant)
     return Response({'message': 'Consultant added successfully'})
+
+@api_view(['POST'])
+def changeData(request):
+    mobileNo = request.data.get('Mobile')
+    email = (request.data.get('Email'))
+    address = (request.data.get('Address'))
+    info = (request.data.get('Information'))
+
+    if request.data['Position'] == "Admin":
+        print('add data to admin collection')
+    elif request.data['Position'] == "Doctor":
+        print('add data to doctor collection')
+    elif request.data['Position'] == "Consultant":
+        print('add data to consultant collection')
+    
+    return Response({'message': 'Data changed successfully'})
+
+@api_view(['POST'])
+def getScheduleForDoctor(request):
+
+    print(request.data)
+    Schedule_collection = db['TimeTable-Doctor']
+    projection = {'shifts': 1, '_id':0, 'wardID':1,'wardName':1,'numOfShifts':1}
+    Schedule_details = [i for i in Schedule_collection.find({'email':request.data['email'], 'y-m': request.data['ym']}, projection)][0]
+
+    result = dict()
+    result['wardID'] = Schedule_details['wardID']
+    result['wardName'] = Schedule_details['wardName']
+    result['numOfShifts'] = Schedule_details['numOfShifts']
+    
+    for i in Schedule_details['shifts']:
+        result[i["date"]] = i["time"]
+
+    print("result = ",result)
+    if result:
+        return JsonResponse(result)
+
+    else:
+        return JsonResponse(result)
+
+    

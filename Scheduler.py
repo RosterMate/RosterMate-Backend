@@ -1,5 +1,4 @@
 from calendar import monthrange
-import random
 
 class Scheduler:
     def __init__(self, doctors_details, shift_types, num_doctors,consecutive_shifts, year, month):
