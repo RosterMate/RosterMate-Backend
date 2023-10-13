@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-+bbh^#^=zl4ru@s=w3$)kns6hvzqbj4(k(nroj7a)&n!3j3rm%
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -78,22 +78,10 @@ WSGI_APPLICATION = 'RosterMateBackend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-'''
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
-'''
-DATABASES = {
-    'default': {
-        'ENGINE': 'djongo',
-        'NAME': 'rosterMateDB',
-        'ENFORCE_SCHEMA': False,
-        'USER': 'thejanweerasekara',
-        'PASSWORD': '5050492',
-        'HOST': 'localhost',
+         'NAME': 'db.sqlite3',
     }
 }
 

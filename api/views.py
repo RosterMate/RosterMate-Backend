@@ -2,8 +2,9 @@ from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from pymongo import MongoClient
+from django.http import HttpResponse
 
-uri = "mongodb+srv://thejanbweerasekara:atYiYnBqom0ZrQXt@rostermatedb.n9yfrig.mongodb.net/"
+uri = "mongodb+srv://sithumv:atYiYnBqom0ZrQXt@rostermatedb.n9yfrig.mongodb.net/"
 
 @api_view(['POST'])
 def user_login(request):
@@ -30,3 +31,13 @@ def user_login(request):
             'USERTYPE': 'Public',
         }
         return Response(data)
+
+# def add(request):
+#     name = "Example"
+#     description = "This is an example document."
+
+#     my_doc = MyCollection(name=name, description=description)
+#     my_doc.save()
+
+#     return HttpResponse("Data added to the collection.")
+
