@@ -68,10 +68,11 @@ def consultantDetails(request):
     else:
         return JsonResponse(None) 
     
+
 @api_view(['POST'])
 def view_profile(request):
 
-    print("Data from frontend -",request.data)
+    #print("Data from frontend -",request.data)
     client = MongoClient(uri)
     db = client.RosterMateDB
     if request.data['type'] == "Admin":
@@ -87,8 +88,8 @@ def view_profile(request):
     'address': 1,
     'information': 1,
     'mobile': 1,}
-    profile_details = [{'name': i['name'], 'position': i['position'],'img':i['img'],'address':i['address'],'information':i['information'],'mobile':i['mobile']} for i in profile_details_collection.find({'email':request.data['email']}, projection)][0]
-
+    profile_details = [{'name': i['name'], 'position': i['position'],'img':i['img'],'address':i['address'],'mobile':i['mobile']} for i in profile_details_collection.find({'email':request.data['email']}, projection)][0]
+    #,'information':i['information'],
     client.close()
     #print(profile_details)
     if profile_details:
