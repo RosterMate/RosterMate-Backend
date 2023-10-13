@@ -40,8 +40,8 @@ def doctorDetails(request):
     db = client.RosterMateDB
     doctor_details_collection = db['User-Doctor']
 
-    projection = {'name': 1, 'position': 1,'img':1}
-    doctor_details = [{'name': i['name'], 'position': i['position'],'img':i['img']} for i in doctor_details_collection.find({}, projection)]
+    projection = {'name': 1, 'position': 1,'img':1,'wardNumber':1}
+    doctor_details = [{'name': i['name'], 'position': i['position'],'img':i['img'],'wardNumber':i['wardNumber']} for i in doctor_details_collection.find({}, projection)]
 
     client.close()
 
@@ -86,10 +86,15 @@ def view_profile(request):
     'name': 1,
     'position': 1,
     'address': 1,
-    'information': 1,
+    'Specialization':1,
     'mobile': 1,}
+<<<<<<< Updated upstream
     profile_details = [{'name': i['name'], 'position': i['position'],'img':i['img'],'address':i['address'],'mobile':i['mobile']} for i in profile_details_collection.find({'email':request.data['email']}, projection)][0]
     #,'information':i['information'],
+=======
+    profile_details = [{'name': i['name'], 'position': i['position'],'img':i['img'],'address':i['address'],'Specialization':i['Specialization'],'mobile':i['mobile']} for i in profile_details_collection.find({'email':request.data['email']}, projection)][0]
+
+>>>>>>> Stashed changes
     client.close()
     #print(profile_details)
     if profile_details:
