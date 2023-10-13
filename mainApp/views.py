@@ -11,21 +11,19 @@ from .models import UserConsultant_collection
 from .models import WardDetail_collection
 from .models import UserAuth_collection
 
+from database_Connection import db
 
-uri = "mongodb+srv://thejanbweerasekara:atYiYnBqom0ZrQXt@rostermatedb.n9yfrig.mongodb.net/"
+
 
 @api_view(['POST'])
 def wardDetails(request):
 
     #print("Data from frontend -")
-    client = MongoClient(uri)
-    db = client.RosterMateDB
     ward_details_collection = db['WardDetails']
 
     projection = {'wardName': 1, 'NoOfDoctors': 1}
     ward_details = [{'wardName': i['wardName'], 'NoOfDoctors': i['NoOfDoctors']} for i in ward_details_collection.find({}, projection)]
 
-    client.close()
 
     if ward_details:
         return Response(ward_details)
@@ -34,16 +32,12 @@ def wardDetails(request):
     
 @api_view(['POST'])
 def doctorDetails(request):
-
-    #print("Data from frontend -")
-    client = MongoClient(uri)
-    db = client.RosterMateDB
+    
     doctor_details_collection = db['User-Doctor']
 
     projection = {'name': 1, 'position': 1,'img':1,'wardNumber':1}
     doctor_details = [{'name': i['name'], 'position': i['position'],'img':i['img'],'wardNumber':i['wardNumber']} for i in doctor_details_collection.find({}, projection)]
 
-    client.close()
 
     if doctor_details:
         return Response(doctor_details)
@@ -53,15 +47,9 @@ def doctorDetails(request):
 @api_view(['POST'])
 def consultantDetails(request):
 
-    #print("Data from frontend -")
-    client = MongoClient(uri)
-    db = client.RosterMateDB
     consultant_details_collection = db['User-Consultant']
-
     projection = {'name': 1, 'position': 1,'img':1}
     consultant_details = [{'name': i['name'], 'position': i['position'],'img':i['img']} for i in consultant_details_collection.find({}, projection)]
-
-    client.close()
 
     if consultant_details:
         return Response(consultant_details)
@@ -72,9 +60,6 @@ def consultantDetails(request):
 @api_view(['POST'])
 def view_profile(request):
 
-    #print("Data from frontend -",request.data)
-    client = MongoClient(uri)
-    db = client.RosterMateDB
     if request.data['type'] == "Admin":
         profile_details_collection = db['User-Admin']
     elif request.data['type'] == "Doctor":
@@ -88,15 +73,9 @@ def view_profile(request):
     'address': 1,
     'Specialization':1,
     'mobile': 1,}
-<<<<<<< Updated upstream
-    profile_details = [{'name': i['name'], 'position': i['position'],'img':i['img'],'address':i['address'],'mobile':i['mobile']} for i in profile_details_collection.find({'email':request.data['email']}, projection)][0]
-    #,'information':i['information'],
-=======
     profile_details = [{'name': i['name'], 'position': i['position'],'img':i['img'],'address':i['address'],'Specialization':i['Specialization'],'mobile':i['mobile']} for i in profile_details_collection.find({'email':request.data['email']}, projection)][0]
 
->>>>>>> Stashed changes
-    client.close()
-    #print(profile_details)
+
     if profile_details:
         return Response(profile_details)
     else:
@@ -167,13 +146,20 @@ def addWard(request):
     ConsecutiveShifts = int(request.data.get('consecutiveshifts'))
     NoOfDoctors = int(request.data.get('maxnumberdoctors'))
 
+    ward_details_collection = db['WardDetails']
+    query = {"wardNumber": wardNumber}
+    result = ward_details_collection.find_one(query)
+
+    if result:
+        return Response({'error': 'true'})
+
     # print((wardName,wardNumber,Shifts,MaxLeaves,ConsecutiveShifts,NoOfDoctors))
     ward_data = {
         'wardName': wardName,
         'wardNumber': wardNumber,
         'Shifts': Shifts,
         'ConsecutiveShifts': ConsecutiveShifts,
-        'NoOfDoctors': NoOfDoctors,
+        'NoOfDoctors': 0,
         'MaxLeaves': MaxLeaves
     }
 
