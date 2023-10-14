@@ -2,18 +2,27 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    
+    path('view_profile', views.view_profile, name='view_profile') ,
+    path('changeData', views.changeData, name='changeData') ,
+
+    # Admin
     path('wardDetails', views.wardDetails, name='wardDetails') ,
     path('doctorDetails', views.doctorDetails, name='doctorDetails') ,
     path('consultantDetails', views.consultantDetails, name='consultantDetails') ,
-    path('view_profile', views.view_profile, name='view_profile') ,
     path('addWard', views.addWard, name='addWard') ,
-    path('leaveReqDetails', views.leaveRequests, name='leaveReqDetails') ,
-    path('view_All_Users', views.view_all_users, name='view_All_Users'),
-    path('addWard', views.addWard, name='addWard') ,
-    path('sendWardDetails', views.sendWardDetails, name='sendWardDetails') ,
     path('addDoctor', views.addDoctor, name='addDoctor') ,
     path('addConsultant', views.addConsultant, name='addConsultant') ,
-    path('changeData', views.changeData, name='changeData') ,
+
+    path('leaveReqDetails', views.leaveRequests, name='leaveReqDetails') ,
+    path('sendWardDetails', views.sendWardDetails, name='sendWardDetails') ,
+    # Doctor
     path('getScheduleForDoctor', views.getScheduleForDoctor, name='getScheduleForDoctor') ,
+
+
+    # Consultant
+    path('consViewDoctors', views.consViewDoctors, name='consViewDoctors') ,
+    path('consViewConsultants', views.consViewConsultants, name='consViewConsultants') ,
+    path('getScheduleForWard', views.getScheduleForWard, name='getScheduleForWard') ,
 
 ]

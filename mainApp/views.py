@@ -13,17 +13,14 @@ from .models import UserAuth_collection
 
 from database_Connection import db
 
-
+##### Admin views #####
 
 @api_view(['POST'])
 def wardDetails(request):
 
-    #print("Data from frontend -")
     ward_details_collection = db['WardDetails']
-
     projection = {'wardName': 1, 'NoOfDoctors': 1}
     ward_details = [{'wardName': i['wardName'], 'NoOfDoctors': i['NoOfDoctors']} for i in ward_details_collection.find({}, projection)]
-
 
     if ward_details:
         return Response(ward_details)
@@ -54,32 +51,6 @@ def consultantDetails(request):
     else:
         return JsonResponse(None) 
     
-
-@api_view(['POST'])
-def view_profile(request):
-
-    if request.data['type'] == "Admin":
-        profile_details_collection = db['User-Admin']
-    elif request.data['type'] == "Doctor":
-        profile_details_collection = db['User-Doctor']
-    elif request.data['type'] == "Consultant":
-        profile_details_collection = db['User-Consultant']
-
-    projection = {'img': 1,
-    'name': 1,
-    'position': 1,
-    'address': 1,
-    'information': 1,
-    'mobile': 1,}
-    profile_details = [{'name': i['name'], 'position': i['position'],'img':i['img'],'address':i['address'],'mobile':i['mobile']} for i in profile_details_collection.find({'email':request.data['email']}, projection)][0]
-    #,'information':i['information'],
-    
-    if profile_details:
-        return Response(profile_details)
-    else:
-        return JsonResponse(None)
-    
-
 @api_view(['POST'])
 def leaveRequests(request):
     # Define the query conditions for each Status
@@ -112,29 +83,6 @@ def leaveRequests(request):
     else:
         return JsonResponse(None, safe=False)
     
-
-
-@api_view(['POST'])
-def view_all_users(request):
-    user_type = request.data.get('type')
-    email = request.data.get('email')
-
-    if user_type == "Consultant":
-        consultant = UserConsultant_collection.find_one({'email': email})
-        
-        if consultant:
-            ward_number = consultant.get('wardNumber')
-            doctors_in_wards = list(UserDoctor_collection.find({'wardNumber': ward_number}, projection={'_id': 0, 'img': 1, 'name': 1, 'position': 1}))
-            
-            if doctors_in_wards:
-                return Response(doctors_in_wards)
-            else:
-                return JsonResponse({'message': 'No doctors found in the same ward'}, status=404)
-        else:
-            return JsonResponse({'message': 'Consultant not found'}, status=404)
-    
-    return JsonResponse({'message': 'Invalid user type'}, status=400)
-
 @api_view(['POST'])
 def addWard(request):
     wardName = request.data.get('wardname')
@@ -147,10 +95,14 @@ def addWard(request):
     ward_details_collection = db['WardDetails']
     query = {"wardNumber": wardNumber}
     result = ward_details_collection.find_one(query)
-
     if result:
-        return Response({'error': 'true'})
-
+        return Response({'error': 'Ward ID'})
+    
+    query = {"wardName": wardName}
+    result = ward_details_collection.find_one(query)
+    if result:
+        return Response({'error': 'Ward Name'})
+    
     # print((wardName,wardNumber,Shifts,MaxLeaves,ConsecutiveShifts,NoOfDoctors))
     ward_data = {
         'wardName': wardName,
@@ -158,11 +110,14 @@ def addWard(request):
         'Shifts': Shifts,
         'ConsecutiveShifts': ConsecutiveShifts,
         'NoOfDoctors': 0,
-        'MaxLeaves': MaxLeaves
+        'MaxLeaves': MaxLeaves,
+        'Doctors': []
     }
 
     WardDetail_collection.insert_one(ward_data)
     return Response({'message': 'Ward added successfully'})
+
+
 
 @api_view(['POST'])
 def sendWardDetails(request):
@@ -263,16 +218,24 @@ def changeData(request):
     
     return Response({'message': 'Data changed successfully'})
 
+##### Doctor views #####
+
 @api_view(['POST'])
 def getScheduleForDoctor(request):
 
-    print(request.data)
+    #print(request.data)
     Schedule_collection = db['TimeTable-Doctor']
     projection = {'shifts': 1, '_id':0, 'wardID':1,'wardName':1,'numOfShifts':1}
-    Schedule_details = [i for i in Schedule_collection.find({'email':request.data['email'], 'y-m': request.data['ym']}, projection)][0]
+    Schedule_details = Schedule_collection.find_one({'email':request.data['email'], 'y-m': request.data['ym']}, projection)
+
+    if Schedule_details:
+        pass
+    else:
+        print('Doctor schedule not found in database')
+        return JsonResponse({'message': 'No schedule found'}, status=404)
 
     result = dict()
-    result['topic'] = Schedule_details['wardID']+' : '+Schedule_details['wardName']
+    result['topic'] = Schedule_details['wardID']+' | '+Schedule_details['wardName']
     result['schedule'] = []
     
     for i in Schedule_details['shifts']:
@@ -280,26 +243,25 @@ def getScheduleForDoctor(request):
             new = dict()
             new['Subject'] = Schedule_details['wardID']+' | '+Schedule_details['wardName']+" | "+time
 
-            #if Schedule_details['numOfShifts'] == 3:
-            if time == 'morning':
-                new['StartTime'] = request.data['ym']+'-'+i['date']+'T07:00'
-                new['EndTime'] = request.data['ym']+'-'+i['date']+'T13:30'
-            elif time == 'evening':
-                new['StartTime'] = request.data['ym']+'-'+i['date']+'T13:30'
-                new['EndTime'] = request.data['ym']+'-'+i['date']+'T20:00'
-            elif time == 'night':
-                new['StartTime'] = request.data['ym']+'-'+i['date']+'T20:00'
-                new['EndTime'] = request.data['ym']+'-'+str(int(i['date'])+1)+'T07:00'
-            else:
-                print(time)
-            '''elif Schedule_details['numOfShifts'] == 2:
+            if Schedule_details['numOfShifts'] == 3:
+                if time == 'morning':
+                    new['StartTime'] = request.data['ym']+'-'+i['date']+'T07:00'
+                    new['EndTime'] = request.data['ym']+'-'+i['date']+'T13:30'
+                elif time == 'evening':
+                    new['StartTime'] = request.data['ym']+'-'+i['date']+'T13:30'
+                    new['EndTime'] = request.data['ym']+'-'+i['date']+'T20:00'
+                elif time == 'night':
+                    new['StartTime'] = request.data['ym']+'-'+i['date']+'T20:00'
+                    new['EndTime'] = request.data['ym']+'-'+str(int(i['date'])+1)+'T07:00'
+
+            elif Schedule_details['numOfShifts'] == 2:
                 if time == 'morning':
                     new['StartTime'] = request.data['ym']+'-'+i['date']+'T08:00'
                     new['EndTime'] = request.data['ym']+'-'+i['date']+'T16:30'
                 elif time == 'night':
                     new['StartTime'] = request.data['ym']+'-'+i['date']+'T16:30'
                     new['EndTime'] = request.data['ym']+'-'+str(int(i['date'])+1)+'T08:00'
-            '''
+            
             result['schedule'].append(new)        
 
     print("num of shifts = ",len(result['schedule']))
@@ -310,4 +272,130 @@ def getScheduleForDoctor(request):
         print('Doctor schedule not found')
         return JsonResponse({'message': 'No schedule found'}, status=404)
 
+
+##### Consultant views #####
+@api_view(['POST'])
+def consViewDoctors(request):
+    user_type = request.data.get('type')
+    email = request.data.get('email')
+
+    if user_type == "Consultant":
+        consultant = UserConsultant_collection.find_one({'email': email})
+        
+        if consultant:
+            ward_number = consultant.get('wardNumber')
+            doctors_in_wards = list(UserDoctor_collection.find({'wardNumber': ward_number}, projection={'_id': 0, 'img': 1, 'name': 1, 'position': 1}))
+            
+            if doctors_in_wards:
+                return Response(doctors_in_wards)
+            else:
+                return JsonResponse({'message': 'No doctors found in the same ward'})
+        else:
+            return JsonResponse({'message': 'Consultant not found'}, status=404)
+    
+    return JsonResponse({'message': 'Invalid user type'}, status=400)
+
+@api_view(['POST'])
+def consViewConsultants(request):
+    user_type = request.data.get('type')
+    email = request.data.get('email')
+
+    if user_type == "Consultant":
+        consultant = UserConsultant_collection.find_one({'email': email})
+        
+        if consultant:
+            ward_number = consultant.get('wardNumber')
+            doctors_in_wards = list(UserConsultant_collection.find({'wardNumber': ward_number}, projection={'_id': 0, 'img': 1, 'name': 1, 'position': 1}))
+            
+            if doctors_in_wards:
+                return Response(doctors_in_wards)
+            else:
+                return JsonResponse({'message': 'No doctors found in the same ward'})
+        else:
+            return JsonResponse({'message': 'Consultant not found'}, status=404)
+    
+    return JsonResponse({'message': 'Invalid user type'}, status=400)
+
+@api_view(['POST'])
+def getScheduleForWard(request):
+    
+    Ward = db['User-Consultant']
+    projection = {'wardNumber': 1, '_id':0}
+    Ward = Ward.find_one({'email':request.data['email']}, projection)
+
+
+    doctor_details = db['WardDetails']
+    projection = {'_id':0, 'Doctors':1,'wardName':1}
+    doctor_details = doctor_details.find_one({'wardNumber':Ward['wardNumber']}, projection)
+
+    result = dict()
+    result['wardName'] = doctor_details['wardName']
+    result['schedule'] = []
+    schedule_details = db['TimeTable-Doctor']
+    projection = {'_id':0, 'shifts':1,'name':1,'numOfShifts':1}
+    for doctor in doctor_details['Doctors']:
+        schedule_detail = schedule_details.find_one({'email':doctor, 'y-m': request.data['ym']}, projection)
+
+        if schedule_detail:
+            new = dict()
+            
+            for i in schedule_detail['shifts']:
+                for time in i['time']:
+                    new = dict()
+                    new['Subject'] = schedule_detail['name']+" | "+time
+
+
+                    if schedule_detail['numOfShifts'] == 3:
+                        if time == 'morning':
+                            new['StartTime'] = request.data['ym']+'-'+i['date']+'T07:00'
+                            new['EndTime'] = request.data['ym']+'-'+i['date']+'T13:30'
+                        elif time == 'evening':
+                            new['StartTime'] = request.data['ym']+'-'+i['date']+'T13:30'
+                            new['EndTime'] = request.data['ym']+'-'+i['date']+'T20:00'
+                        elif time == 'night':
+                            new['StartTime'] = request.data['ym']+'-'+i['date']+'T20:00'
+                            new['EndTime'] = request.data['ym']+'-'+str(int(i['date'])+1)+'T07:00'
+
+                    elif schedule_detail['numOfShifts'] == 2:
+                        if time == 'morning':
+                            new['StartTime'] = request.data['ym']+'-'+i['date']+'T08:00'
+                            new['EndTime'] = request.data['ym']+'-'+i['date']+'T16:30'
+                        elif time == 'night':
+                            new['StartTime'] = request.data['ym']+'-'+i['date']+'T16:30'
+                            new['EndTime'] = request.data['ym']+'-'+str(int(i['date'])+1)+'T08:00'
+                    
+                    result['schedule'].append(new)
+    
+    if result:
+        print('Doctor schedule found')
+        return JsonResponse(result)
+    else:
+        print('Doctor schedule not found')
+        return JsonResponse({'message': 'No schedule found'}, status=404)
+    
+##### All users views #####
+
+@api_view(['POST'])
+def view_profile(request):
+
+    if request.data['type'] == "Admin":
+        profile_details_collection = db['User-Admin']
+    elif request.data['type'] == "Doctor":
+        profile_details_collection = db['User-Doctor']
+    elif request.data['type'] == "Consultant":
+        profile_details_collection = db['User-Consultant']
+
+    projection = {'img': 1,
+    'name': 1,
+    'position': 1,
+    'address': 1,
+    'information': 1,
+    'mobile': 1,}
+    profile_details = [{'name': i['name'], 'position': i['position'],'img':i['img'],'address':i['address'],'mobile':i['mobile']} for i in profile_details_collection.find({'email':request.data['email']}, projection)][0]
+    #,'information':i['information'],
+    
+    if profile_details:
+        return Response(profile_details)
+    else:
+        return JsonResponse(None)
     
