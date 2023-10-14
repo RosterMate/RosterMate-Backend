@@ -13,5 +13,7 @@ urlpatterns = [
     path('sendWardDetails', views.sendWardDetails, name='sendWardDetails') ,
     path('addDoctor', views.addDoctor, name='addDoctor') ,
     path('addConsultant', views.addConsultant, name='addConsultant') ,
+    path('changeData', views.changeData, name='changeData') ,
+    path('getScheduleForDoctor', views.getScheduleForDoctor, name='getScheduleForDoctor') ,
 
 ]

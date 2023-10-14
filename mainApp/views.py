@@ -246,3 +246,68 @@ def addConsultant(request):
     UserConsultant_collection.insert_one(consultant_data)
     UserAuth_collection.insert_one(UserAuth_Consultant)
     return Response({'message': 'Consultant added successfully'})
+
+@api_view(['POST'])
+def changeData(request):
+    mobileNo = request.data.get('Mobile')
+    email = (request.data.get('Email'))
+    address = (request.data.get('Address'))
+    info = (request.data.get('Information'))
+
+    if request.data['Position'] == "Admin":
+        print('add data to admin collection')
+    elif request.data['Position'] == "Doctor":
+        print('add data to doctor collection')
+    elif request.data['Position'] == "Consultant":
+        print('add data to consultant collection')
+    
+    return Response({'message': 'Data changed successfully'})
+
+@api_view(['POST'])
+def getScheduleForDoctor(request):
+
+    print(request.data)
+    Schedule_collection = db['TimeTable-Doctor']
+    projection = {'shifts': 1, '_id':0, 'wardID':1,'wardName':1,'numOfShifts':1}
+    Schedule_details = [i for i in Schedule_collection.find({'email':request.data['email'], 'y-m': request.data['ym']}, projection)][0]
+
+    result = dict()
+    result['topic'] = Schedule_details['wardID']+' : '+Schedule_details['wardName']
+    result['schedule'] = []
+    
+    for i in Schedule_details['shifts']:
+        for time in i['time']:
+            new = dict()
+            new['Subject'] = Schedule_details['wardID']+' | '+Schedule_details['wardName']+" | "+time
+
+            #if Schedule_details['numOfShifts'] == 3:
+            if time == 'morning':
+                new['StartTime'] = request.data['ym']+'-'+i['date']+'T07:00'
+                new['EndTime'] = request.data['ym']+'-'+i['date']+'T13:30'
+            elif time == 'evening':
+                new['StartTime'] = request.data['ym']+'-'+i['date']+'T13:30'
+                new['EndTime'] = request.data['ym']+'-'+i['date']+'T20:00'
+            elif time == 'night':
+                new['StartTime'] = request.data['ym']+'-'+i['date']+'T20:00'
+                new['EndTime'] = request.data['ym']+'-'+str(int(i['date'])+1)+'T07:00'
+            else:
+                print(time)
+            '''elif Schedule_details['numOfShifts'] == 2:
+                if time == 'morning':
+                    new['StartTime'] = request.data['ym']+'-'+i['date']+'T08:00'
+                    new['EndTime'] = request.data['ym']+'-'+i['date']+'T16:30'
+                elif time == 'night':
+                    new['StartTime'] = request.data['ym']+'-'+i['date']+'T16:30'
+                    new['EndTime'] = request.data['ym']+'-'+str(int(i['date'])+1)+'T08:00'
+            '''
+            result['schedule'].append(new)        
+
+    print("num of shifts = ",len(result['schedule']))
+    if result:
+        print('Doctor schedule found')
+        return JsonResponse(result)
+    else:
+        print('Doctor schedule not found')
+        return JsonResponse({'message': 'No schedule found'}, status=404)
+
+    
