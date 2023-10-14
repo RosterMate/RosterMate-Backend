@@ -95,10 +95,14 @@ def addWard(request):
     ward_details_collection = db['WardDetails']
     query = {"wardNumber": wardNumber}
     result = ward_details_collection.find_one(query)
-
     if result:
-        return Response({'error': 'true'})
-
+        return Response({'error': 'Ward ID'})
+    
+    query = {"wardName": wardName}
+    result = ward_details_collection.find_one(query)
+    if result:
+        return Response({'error': 'Ward Name'})
+    
     # print((wardName,wardNumber,Shifts,MaxLeaves,ConsecutiveShifts,NoOfDoctors))
     ward_data = {
         'wardName': wardName,
@@ -106,7 +110,8 @@ def addWard(request):
         'Shifts': Shifts,
         'ConsecutiveShifts': ConsecutiveShifts,
         'NoOfDoctors': 0,
-        'MaxLeaves': MaxLeaves
+        'MaxLeaves': MaxLeaves,
+        'Doctors': []
     }
 
     WardDetail_collection.insert_one(ward_data)
@@ -230,7 +235,7 @@ def getScheduleForDoctor(request):
         return JsonResponse({'message': 'No schedule found'}, status=404)
 
     result = dict()
-    result['topic'] = Schedule_details['wardID']+' : '+Schedule_details['wardName']
+    result['topic'] = Schedule_details['wardID']+' | '+Schedule_details['wardName']
     result['schedule'] = []
     
     for i in Schedule_details['shifts']:
