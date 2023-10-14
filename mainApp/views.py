@@ -272,18 +272,42 @@ def getScheduleForDoctor(request):
     Schedule_details = [i for i in Schedule_collection.find({'email':request.data['email'], 'y-m': request.data['ym']}, projection)][0]
 
     result = dict()
-    result['wardID'] = Schedule_details['wardID']
-    result['wardName'] = Schedule_details['wardName']
-    result['numOfShifts'] = Schedule_details['numOfShifts']
+    result['topic'] = Schedule_details['wardID']+' : '+Schedule_details['wardName']
+    result['schedule'] = []
     
     for i in Schedule_details['shifts']:
-        result[i["date"]] = i["time"]
+        for time in i['time']:
+            new = dict()
+            new['Subject'] = Schedule_details['wardID']+' | '+Schedule_details['wardName']+" | "+time
 
-    print("result = ",result)
+            #if Schedule_details['numOfShifts'] == 3:
+            if time == 'morning':
+                new['StartTime'] = request.data['ym']+'-'+i['date']+'T07:00'
+                new['EndTime'] = request.data['ym']+'-'+i['date']+'T13:30'
+            elif time == 'evening':
+                new['StartTime'] = request.data['ym']+'-'+i['date']+'T13:30'
+                new['EndTime'] = request.data['ym']+'-'+i['date']+'T20:00'
+            elif time == 'night':
+                new['StartTime'] = request.data['ym']+'-'+i['date']+'T20:00'
+                new['EndTime'] = request.data['ym']+'-'+str(int(i['date'])+1)+'T07:00'
+            else:
+                print(time)
+            '''elif Schedule_details['numOfShifts'] == 2:
+                if time == 'morning':
+                    new['StartTime'] = request.data['ym']+'-'+i['date']+'T08:00'
+                    new['EndTime'] = request.data['ym']+'-'+i['date']+'T16:30'
+                elif time == 'night':
+                    new['StartTime'] = request.data['ym']+'-'+i['date']+'T16:30'
+                    new['EndTime'] = request.data['ym']+'-'+str(int(i['date'])+1)+'T08:00'
+            '''
+            result['schedule'].append(new)        
+
+    print("num of shifts = ",len(result['schedule']))
     if result:
+        print('Doctor schedule found')
         return JsonResponse(result)
-
     else:
-        return JsonResponse(result)
+        print('Doctor schedule not found')
+        return JsonResponse({'message': 'No schedule found'}, status=404)
 
     
