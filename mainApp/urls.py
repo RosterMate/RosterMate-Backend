@@ -22,6 +22,7 @@ urlpatterns = [
 
     # Consultant
     path('consViewDoctors', views.consViewDoctors, name='consViewDoctors') ,
+    path('consViewConsultants', views.consViewConsultants, name='consViewConsultants') ,
     path('getScheduleForWard', views.getScheduleForWard, name='getScheduleForWard') ,
 
 ]

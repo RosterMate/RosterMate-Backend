@@ -291,6 +291,27 @@ def consViewDoctors(request):
     return JsonResponse({'message': 'Invalid user type'}, status=400)
 
 @api_view(['POST'])
+def consViewConsultants(request):
+    user_type = request.data.get('type')
+    email = request.data.get('email')
+
+    if user_type == "Consultant":
+        consultant = UserConsultant_collection.find_one({'email': email})
+        
+        if consultant:
+            ward_number = consultant.get('wardNumber')
+            doctors_in_wards = list(UserConsultant_collection.find({'wardNumber': ward_number}, projection={'_id': 0, 'img': 1, 'name': 1, 'position': 1}))
+            
+            if doctors_in_wards:
+                return Response(doctors_in_wards)
+            else:
+                return JsonResponse({'message': 'No doctors found in the same ward'})
+        else:
+            return JsonResponse({'message': 'Consultant not found'}, status=404)
+    
+    return JsonResponse({'message': 'Invalid user type'}, status=400)
+
+@api_view(['POST'])
 def getScheduleForWard(request):
     
     Ward = db['User-Consultant']
