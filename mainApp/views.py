@@ -318,11 +318,13 @@ def getScheduleForWard(request):
     projection = {'wardNumber': 1, '_id':0}
     Ward = Ward.find_one({'email':request.data['email']}, projection)
 
+
     doctor_details = db['WardDetails']
-    projection = {'_id':0, 'Doctors':1}
+    projection = {'_id':0, 'Doctors':1,'wardName':1}
     doctor_details = doctor_details.find_one({'wardNumber':Ward['wardNumber']}, projection)
 
     result = dict()
+    result['wardName'] = doctor_details['wardName']
     result['schedule'] = []
     schedule_details = db['TimeTable-Doctor']
     projection = {'_id':0, 'shifts':1,'name':1,'numOfShifts':1}
