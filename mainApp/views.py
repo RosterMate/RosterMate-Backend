@@ -135,10 +135,6 @@ def addDoctor(request):
         'name': fullName,
     }
     UserAuth_collection.insert_one(UserAuth_Doctor)
-    #, 'email': 'tekara@gmail.com', 'password': '12345433', 'type': 'Doctor', 'name': 'a Weerasekara'
-    data = UserAuth_collection.find_one({'_id': ObjectId('652df7c91bf895713dbee712')})
-    if data:
-        print('data1 = ',data)
 
     ### Update 'WardDetails' Collection
     query = {
@@ -375,10 +371,23 @@ def getScheduleForWard(request):
 
 @api_view(['POST'])
 def leaveResponse(request):
-    if request.data['Status'] == "Accepted":
-        pass
-    elif request.data['Status'] == "Rejected":
-        pass
+
+    ### Update 'LeaveRequests' Collection
+    query = {
+        "Status": "NoResponse",
+        "Name": request.data["name"],
+        "Date": request.data["date"],
+        "FromTime": request.data["fromTime"]
+    }
+    document = LeaveRequests_collection.find_one(query)
+
+    if document:
+        document['Status'] = request.data["status"]
+        LeaveRequests_collection.update_one(query, {"$set": document})
+        print("Updated Document:", document)
+    else:
+        print("Document not found")
+        return Response({'message': 'LeaveRequests Collection Cannot find.'})
 
     return JsonResponse({'message': 'Leave response saved successfully'})
 
