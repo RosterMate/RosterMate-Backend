@@ -18,9 +18,8 @@ from database_Connection import db
 @api_view(['POST'])
 def wardDetails(request):
 
-    ward_details_collection = db['WardDetails']
     projection = {'wardName': 1, 'NoOfDoctors': 1}
-    ward_details = [{'wardName': i['wardName'], 'NoOfDoctors': i['NoOfDoctors']} for i in ward_details_collection.find({}, projection)]
+    ward_details = [{'wardName': i['wardName'], 'NoOfDoctors': i['NoOfDoctors']} for i in WardDetail_collection.find({}, projection)]
 
     if ward_details:
         return Response(ward_details)
@@ -30,9 +29,8 @@ def wardDetails(request):
 @api_view(['POST'])
 def doctorDetails(request):
     
-    doctor_details_collection = db['User-Doctor']
     projection = {'name': 1, 'position': 1,'img':1}
-    doctor_details = [{'name': i['name'], 'position': i['position'],'img':i['img']} for i in doctor_details_collection.find({}, projection)]
+    doctor_details = [{'name': i['name'], 'position': i['position'],'img':i['img']} for i in UserDoctor_collection.find({}, projection)]
 
     if doctor_details:
         return Response(doctor_details)
@@ -42,9 +40,8 @@ def doctorDetails(request):
 @api_view(['POST'])
 def consultantDetails(request):
 
-    consultant_details_collection = db['User-Consultant']
     projection = {'name': 1, 'position': 1,'img':1}
-    consultant_details = [{'name': i['name'], 'position': i['position'],'img':i['img']} for i in consultant_details_collection.find({}, projection)]
+    consultant_details = [{'name': i['name'], 'position': i['position'],'img':i['img']} for i in UserConsultant_collection.find({}, projection)]
 
     if consultant_details:
         return Response(consultant_details)
@@ -53,7 +50,7 @@ def consultantDetails(request):
     
 @api_view(['POST'])
 def leaveRequests(request):
-    # Define the query conditions for each Status
+
     query_conditions = [
         {'Status': "NoResponse"},
         {'Status': "Accepted"},
@@ -92,18 +89,19 @@ def addWard(request):
     ConsecutiveShifts = int(request.data.get('consecutiveshifts'))
     NoOfDoctors = int(request.data.get('maxnumberdoctors'))
 
-    ward_details_collection = db['WardDetails']
+    ### Ward ID already exists
     query = {"wardNumber": wardNumber}
-    result = ward_details_collection.find_one(query)
+    result = WardDetail_collection.find_one(query)
     if result:
         return Response({'error': 'Ward ID'})
     
+    ### Ward name already exists
     query = {"wardName": wardName}
-    result = ward_details_collection.find_one(query)
+    result = WardDetail_collection.find_one(query)
     if result:
         return Response({'error': 'Ward Name'})
     
-    # print((wardName,wardNumber,Shifts,MaxLeaves,ConsecutiveShifts,NoOfDoctors))
+    ### Add ward data to WardDetails Collection
     ward_data = {
         'wardName': wardName,
         'wardNumber': wardNumber,
@@ -115,6 +113,7 @@ def addWard(request):
     }
 
     WardDetail_collection.insert_one(ward_data)
+
     return Response({'message': 'Ward added successfully'})
 
 
@@ -140,7 +139,13 @@ def addDoctor(request):
     specialization = (request.data.get('specialization'))
     wardNumber = (request.data.get('wardnumber'))
 
-    # print((wardName,wardNumber,Shifts,MaxLeaves,ConsecutiveShifts,NoOfDoctors))
+    ### Email already exists
+    query = {"email": email}
+    result = UserAuth_collection.find_one(query)
+    if result:
+        return Response({'error': 'Email'})
+    
+    ### Add doctor to 'User-Doctor' Collection
     doctor_data = {
         'email': email,
         'position': position,
@@ -152,19 +157,39 @@ def addDoctor(request):
         'Degree':degree,
         'Specialization':specialization,
     }
-    print(doctor_data)
+    UserDoctor_collection.insert_one(doctor_data)
 
+    ### Add doctor to 'UserAuth' Collection
     UserAuth_Doctor = {
         'email':email,
         'password': password,
         'type': 'Doctor',
         'name': fullName,
     }
-    print(UserAuth_Doctor)
-
-    UserDoctor_collection.insert_one(doctor_data)
     UserAuth_collection.insert_one(UserAuth_Doctor)
-    return Response({'message': 'Doctor added successfully'})
+    #, 'email': 'tekara@gmail.com', 'password': '12345433', 'type': 'Doctor', 'name': 'a Weerasekara'
+    data = UserAuth_collection.find_one({'_id': ObjectId('652df7c91bf895713dbee712')})
+    if data:
+        print('data1 = ',data)
+
+    ### Update 'WardDetails' Collection
+    query = {
+        "wardNumber": wardNumber
+    }
+    document = WardDetail_collection.find_one(query)
+
+    if document:
+        document['Doctors'].append(email)
+        document['NoOfDoctors'] += 1
+        
+        WardDetail_collection.update_one(query, {"$set": document})
+
+        print("Updated Document:", document)
+    else:
+        print("Document not found")
+        return Response({'message': 'WardDetails Collection Cannot find.'})
+
+    return Response({'message': 'Doctor cadded successfully'})
 
 @api_view(['POST'])
 def addConsultant(request):
@@ -178,7 +203,13 @@ def addConsultant(request):
     specialization = (request.data.get('specialization'))
     wardNumber = (request.data.get('wardnumber'))
 
-    # print((wardName,wardNumber,Shifts,MaxLeaves,ConsecutiveShifts,NoOfDoctors))
+    ### Email already exists
+    query = {"email": email}
+    result = UserAuth_collection.find_one(query)
+    if result:
+        return Response({'error': 'Email'})
+    
+    ### Add doctor to 'User-Consultant' Collection
     consultant_data = {
         'email': email,
         'position': position,
@@ -190,16 +221,17 @@ def addConsultant(request):
         'Degree':degree,
         'Specialization':specialization,
     }
+    UserConsultant_collection.insert_one(consultant_data)
 
+    ### Add doctor to 'UserAuth' Collection
     UserAuth_Consultant = {
         'email':email,
         'password': password,
         'type': 'Consultant',
         'name': fullName,
     }
-
-    UserConsultant_collection.insert_one(consultant_data)
     UserAuth_collection.insert_one(UserAuth_Consultant)
+
     return Response({'message': 'Consultant added successfully'})
 
 @api_view(['POST'])
