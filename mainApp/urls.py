@@ -14,7 +14,6 @@ urlpatterns = [
     path('addDoctor', views.addDoctor, name='addDoctor') ,
     path('addConsultant', views.addConsultant, name='addConsultant') ,
 
-    path('leaveReqDetails', views.leaveRequests, name='leaveReqDetails') ,
     path('sendWardDetails', views.sendWardDetails, name='sendWardDetails') ,
     # Doctor
     path('getScheduleForDoctor', views.getScheduleForDoctor, name='getScheduleForDoctor') ,
@@ -24,5 +23,6 @@ urlpatterns = [
     path('consViewDoctors', views.consViewDoctors, name='consViewDoctors') ,
     path('consViewConsultants', views.consViewConsultants, name='consViewConsultants') ,
     path('getScheduleForWard', views.getScheduleForWard, name='getScheduleForWard') ,
-
+    path('leaveReqDetails', views.leaveRequests, name='leaveReqDetails') ,
+    path('leaveResponse', views.leaveResponse, name='leaveResponse') ,
 ]

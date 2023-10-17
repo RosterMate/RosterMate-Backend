@@ -47,39 +47,7 @@ def consultantDetails(request):
         return Response(consultant_details)
     else:
         return JsonResponse(None) 
-    
-@api_view(['POST'])
-def leaveRequests(request):
-
-    query_conditions = [
-        {'Status': "NoResponse"},
-        {'Status': "Accepted"},
-        {'Status': "Rejected"},
-    ]
-    if request.data['type'] == "Consultant":
-        consultant_collection = UserConsultant_collection
-
-    current_consultant = consultant_collection.find_one({'email': request.data['email']})
-    if current_consultant:
-        ward_numbers = [current_consultant.get('wardNumber', [])]
-    
-    leaveReq_details = []
-    
-    for condition in query_conditions:
-        # Use list comprehension to convert ObjectId to string
-        documents = list(LeaveRequests_collection.find({'wardNumber': {'$in': ward_numbers}, **condition}))
-        converted_documents = [
-            {k: str(v) if isinstance(v, ObjectId) else v for k, v in doc.items()} 
-            for doc in documents
-        ]
-        leaveReq_details.append(converted_documents)
-        leaveReq_flattened_list = [item for sublist in leaveReq_details for item in (sublist if isinstance(sublist, list) else [sublist])]
-
-    if any(leaveReq_flattened_list):
-        return Response(leaveReq_flattened_list)
-    else:
-        return JsonResponse(None, safe=False)
-    
+  
 @api_view(['POST'])
 def addWard(request):
     wardName = request.data.get('wardname')
@@ -264,7 +232,7 @@ def getScheduleForDoctor(request):
         pass
     else:
         print('Doctor schedule not found in database')
-        return JsonResponse({'message': 'No schedule found'}, status=404)
+        return JsonResponse({'message': 'No schedule found'})
 
     result = dict()
     result['topic'] = Schedule_details['wardID']+' | '+Schedule_details['wardName']
@@ -404,7 +372,59 @@ def getScheduleForWard(request):
     else:
         print('Doctor schedule not found')
         return JsonResponse({'message': 'No schedule found'}, status=404)
+
+@api_view(['POST'])
+def leaveResponse(request):
+    if request.data['Status'] == "Accepted":
+        pass
+    elif request.data['Status'] == "Rejected":
+        pass
+
+    return JsonResponse({'message': 'Leave response saved successfully'})
+
+@api_view(['POST'])
+def leaveRequests(request):
+
+    query_conditions = [
+        {'Status': "Accepted"},
+        {'Status': "Rejected"},
+    ]
+    if request.data['type'] == "Consultant":
+        consultant_collection = UserConsultant_collection
+
+    current_consultant = consultant_collection.find_one({'email': request.data['email']})
+    if current_consultant:
+        ward_numbers = [current_consultant.get('wardNumber', [])]
     
+    result = dict()
+    result['historyDetails'] = []
+    result['reqDetails'] = []
+    
+    for condition in query_conditions:
+        # Use list comprehension to convert ObjectId to string
+        documents = list(LeaveRequests_collection.find({'wardNumber': {'$in': ward_numbers}, **condition}))
+        converted_documents = [
+            {k: str(v) if isinstance(v, ObjectId) else v for k, v in doc.items()} 
+            for doc in documents
+        ]
+        result['historyDetails'].append(converted_documents)
+        result['historyDetails'] = [item for sublist in result['historyDetails'] for item in (sublist if isinstance(sublist, list) else [sublist])]
+
+    # pending leave requests
+    condition = {'Status': "NoResponse"}
+    documents = list(LeaveRequests_collection.find({'wardNumber': {'$in': ward_numbers}, **condition}))
+    converted_documents = [
+        {k: str(v) if isinstance(v, ObjectId) else v for k, v in doc.items()} 
+        for doc in documents
+    ]
+    result['reqDetails'].append(converted_documents)
+    result['reqDetails'] = [item for sublist in result['reqDetails'] for item in (sublist if isinstance(sublist, list) else [sublist])]
+
+    if any(result['historyDetails']):
+        return JsonResponse(result)
+    else:
+        return JsonResponse(None, safe=False)
+   
 ##### All users views #####
 
 @api_view(['POST'])
