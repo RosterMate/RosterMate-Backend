@@ -270,6 +270,32 @@ def getScheduleForDoctor(request):
         return JsonResponse({'message': 'No schedule found'}, status=404)
 
 @api_view(['POST'])
+def docLeaveReq(request):
+    
+    if request.data['type'] != "Doctor":
+        return JsonResponse({'message': 'Invalid user type', 'status': 'error'})
+    
+    leave_req_document = {
+    'email': request.data['email'], 
+    #'fromDate': request.data['fromDate'],
+    #'toDate': request.data['toDate'],
+    'Reason': request.data['reason'],
+    "Status": "NoResponse",
+
+    "Name": "temp",
+    "Date": "temp",
+    "FromTime": "temp",
+    "ToTime": "temp",
+    "wardNumber": "temp"
+    }
+
+    # Insert the document into the collection
+    LeaveRequests_collection.insert_one(leave_req_document)
+
+    return JsonResponse({'message': 'Leave request sent successfully',  'status': 'success'})
+
+
+@api_view(['POST'])
 def docLeaveReqHistory(request):
 
     query_conditions = [

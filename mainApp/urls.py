@@ -18,6 +18,7 @@ urlpatterns = [
     # Doctor
     path('getScheduleForDoctor', views.getScheduleForDoctor, name='getScheduleForDoctor') ,
     path('docLeaveReqHistory', views.docLeaveReqHistory, name='docLeaveReqHistory') ,
+    path('docLeaveReq', views.docLeaveReq, name='docLeaveReq') ,
 
 
     # Consultant
