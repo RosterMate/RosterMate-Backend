@@ -269,6 +269,32 @@ def getScheduleForDoctor(request):
         print('Doctor schedule not found')
         return JsonResponse({'message': 'No schedule found'}, status=404)
 
+@api_view(['POST'])
+def docLeaveReqHistory(request):
+
+    query_conditions = [
+        {'Status': "Accepted", 'email': request.data['email']},
+        {'Status': "Rejected", 'email': request.data['email']},
+    ]
+    if request.data['type'] != "Doctor":
+        return JsonResponse(None, safe=False)
+    
+    result = dict()
+    result['historyDetails'] = []
+    
+    for condition in query_conditions:
+
+        documents = [{'email': i['email'], 'Name': i['Name'],'Date':i['Date'],"FromTime":i["FromTime"],  "ToTime": i["ToTime"],
+  "Reason": i["Reason"],
+  "Status": i["Status"],
+  "wardNumber": i["Status"]} for i in LeaveRequests_collection.find(condition, {'_id':0})]
+
+
+
+        result['historyDetails'].append(documents)
+        result['historyDetails'] = [item for sublist in result['historyDetails'] for item in (sublist if isinstance(sublist, list) else [sublist])]
+    
+    return JsonResponse(result)
 
 ##### Consultant views #####
 @api_view(['POST'])
@@ -473,7 +499,7 @@ def leaveRequests(request):
     result['reqDetails'].append(converted_documents)
     result['reqDetails'] = [item for sublist in result['reqDetails'] for item in (sublist if isinstance(sublist, list) else [sublist])]
 
-    if any(result['historyDetails']):
+    if any(result):
         return JsonResponse(result)
     else:
         return JsonResponse(None, safe=False)
