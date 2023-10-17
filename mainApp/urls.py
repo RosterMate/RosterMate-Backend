@@ -25,4 +25,6 @@ urlpatterns = [
     path('getScheduleForWard', views.getScheduleForWard, name='getScheduleForWard') ,
     path('leaveReqDetails', views.leaveRequests, name='leaveReqDetails') ,
     path('leaveResponse', views.leaveResponse, name='leaveResponse') ,
+    path('conViwAllDocDetails', views.conViwAllDocDetails, name='conViwAllDocDetails') ,
+    path('conViwAllConDetails', views.conViwAllConDetails, name='conViwAllConDetails') ,
 ]

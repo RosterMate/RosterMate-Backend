@@ -200,6 +200,7 @@ def addConsultant(request):
 
 @api_view(['POST'])
 def changeData(request):
+    ##### Not Completed Yet #####
     mobileNo = request.data.get('Mobile')
     email = (request.data.get('Email'))
     address = (request.data.get('Address'))
@@ -290,6 +291,49 @@ def consViewDoctors(request):
             return JsonResponse({'message': 'Consultant not found'}, status=404)
     
     return JsonResponse({'message': 'Invalid user type'}, status=400)
+
+@api_view(['POST'])
+def conViwAllDocDetails(request):
+    user_type = request.data.get('type')
+    email = request.data.get('email')
+
+    if user_type == "Consultant":
+        consultant = UserConsultant_collection.find_one({'email': email},{'wardNumber':1})
+
+        if consultant:
+            ward_number = consultant['wardNumber']
+            doctors_in_wards = list(UserDoctor_collection.find({'wardNumber': ward_number},{'_id':0}))
+            
+            if doctors_in_wards:
+                return Response(doctors_in_wards)
+            else:
+                return JsonResponse({'message': 'No doctors found in this ward'})
+        else:
+            return JsonResponse({'message': 'Consultant not found'})
+    
+    return JsonResponse({'message': 'Invalid user type'})   
+
+
+@api_view(['POST'])
+def conViwAllConDetails(request):
+    user_type = request.data.get('type')
+    email = request.data.get('email')
+
+    if user_type == "Consultant":
+        consultant = UserConsultant_collection.find_one({'email': email},{'wardNumber':1})
+
+        if consultant:
+            ward_number = consultant['wardNumber']
+            con_in_wards = list(UserConsultant_collection.find({'wardNumber': ward_number},{'_id':0}))
+            
+            if con_in_wards:
+                return Response(con_in_wards)
+            else:
+                return JsonResponse({'message': 'No consultants found in this ward'})
+        else:
+            return JsonResponse({'message': 'Consultant not found'})
+    
+    return JsonResponse({'message': 'Invalid user type'})   
 
 @api_view(['POST'])
 def consViewConsultants(request):
@@ -459,4 +503,5 @@ def view_profile(request):
         return Response(profile_details)
     else:
         return JsonResponse(None)
+    
     
