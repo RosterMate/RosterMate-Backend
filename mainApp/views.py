@@ -18,9 +18,8 @@ from database_Connection import db
 @api_view(['POST'])
 def wardDetails(request):
 
-    ward_details_collection = db['WardDetails']
     projection = {'wardName': 1, 'NoOfDoctors': 1}
-    ward_details = [{'wardName': i['wardName'], 'NoOfDoctors': i['NoOfDoctors']} for i in ward_details_collection.find({}, projection)]
+    ward_details = [{'wardName': i['wardName'], 'NoOfDoctors': i['NoOfDoctors']} for i in WardDetail_collection.find({}, projection)]
 
     if ward_details:
         return Response(ward_details)
@@ -30,9 +29,8 @@ def wardDetails(request):
 @api_view(['POST'])
 def doctorDetails(request):
     
-    doctor_details_collection = db['User-Doctor']
     projection = {'name': 1, 'position': 1,'img':1}
-    doctor_details = [{'name': i['name'], 'position': i['position'],'img':i['img']} for i in doctor_details_collection.find({}, projection)]
+    doctor_details = [{'name': i['name'], 'position': i['position'],'img':i['img']} for i in UserDoctor_collection.find({}, projection)]
 
     if doctor_details:
         return Response(doctor_details)
@@ -42,47 +40,14 @@ def doctorDetails(request):
 @api_view(['POST'])
 def consultantDetails(request):
 
-    consultant_details_collection = db['User-Consultant']
     projection = {'name': 1, 'position': 1,'img':1}
-    consultant_details = [{'name': i['name'], 'position': i['position'],'img':i['img']} for i in consultant_details_collection.find({}, projection)]
+    consultant_details = [{'name': i['name'], 'position': i['position'],'img':i['img']} for i in UserConsultant_collection.find({}, projection)]
 
     if consultant_details:
         return Response(consultant_details)
     else:
         return JsonResponse(None) 
-    
-@api_view(['POST'])
-def leaveRequests(request):
-    # Define the query conditions for each Status
-    query_conditions = [
-        {'Status': "NoResponse"},
-        {'Status': "Accepted"},
-        {'Status': "Rejected"},
-    ]
-    if request.data['type'] == "Consultant":
-        consultant_collection = UserConsultant_collection
-
-    current_consultant = consultant_collection.find_one({'email': request.data['email']})
-    if current_consultant:
-        ward_numbers = [current_consultant.get('wardNumber', [])]
-    
-    leaveReq_details = []
-    
-    for condition in query_conditions:
-        # Use list comprehension to convert ObjectId to string
-        documents = list(LeaveRequests_collection.find({'wardNumber': {'$in': ward_numbers}, **condition}))
-        converted_documents = [
-            {k: str(v) if isinstance(v, ObjectId) else v for k, v in doc.items()} 
-            for doc in documents
-        ]
-        leaveReq_details.append(converted_documents)
-        leaveReq_flattened_list = [item for sublist in leaveReq_details for item in (sublist if isinstance(sublist, list) else [sublist])]
-
-    if any(leaveReq_flattened_list):
-        return Response(leaveReq_flattened_list)
-    else:
-        return JsonResponse(None, safe=False)
-    
+  
 @api_view(['POST'])
 def addWard(request):
     wardName = request.data.get('wardname')
@@ -92,18 +57,19 @@ def addWard(request):
     ConsecutiveShifts = int(request.data.get('consecutiveshifts'))
     NoOfDoctors = int(request.data.get('maxnumberdoctors'))
 
-    ward_details_collection = db['WardDetails']
+    ### Ward ID already exists
     query = {"wardNumber": wardNumber}
-    result = ward_details_collection.find_one(query)
+    result = WardDetail_collection.find_one(query)
     if result:
         return Response({'error': 'Ward ID'})
     
+    ### Ward name already exists
     query = {"wardName": wardName}
-    result = ward_details_collection.find_one(query)
+    result = WardDetail_collection.find_one(query)
     if result:
         return Response({'error': 'Ward Name'})
     
-    # print((wardName,wardNumber,Shifts,MaxLeaves,ConsecutiveShifts,NoOfDoctors))
+    ### Add ward data to WardDetails Collection
     ward_data = {
         'wardName': wardName,
         'wardNumber': wardNumber,
@@ -115,6 +81,7 @@ def addWard(request):
     }
 
     WardDetail_collection.insert_one(ward_data)
+
     return Response({'message': 'Ward added successfully'})
 
 
@@ -140,7 +107,13 @@ def addDoctor(request):
     specialization = (request.data.get('specialization'))
     wardNumber = (request.data.get('wardnumber'))
 
-    # print((wardName,wardNumber,Shifts,MaxLeaves,ConsecutiveShifts,NoOfDoctors))
+    ### Email already exists
+    query = {"email": email}
+    result = UserAuth_collection.find_one(query)
+    if result:
+        return Response({'error': 'Email'})
+    
+    ### Add doctor to 'User-Doctor' Collection
     doctor_data = {
         'email': email,
         'position': position,
@@ -152,19 +125,35 @@ def addDoctor(request):
         'Degree':degree,
         'Specialization':specialization,
     }
-    print(doctor_data)
+    UserDoctor_collection.insert_one(doctor_data)
 
+    ### Add doctor to 'UserAuth' Collection
     UserAuth_Doctor = {
         'email':email,
         'password': password,
         'type': 'Doctor',
         'name': fullName,
     }
-    print(UserAuth_Doctor)
-
-    UserDoctor_collection.insert_one(doctor_data)
     UserAuth_collection.insert_one(UserAuth_Doctor)
-    return Response({'message': 'Doctor added successfully'})
+
+    ### Update 'WardDetails' Collection
+    query = {
+        "wardNumber": wardNumber
+    }
+    document = WardDetail_collection.find_one(query)
+
+    if document:
+        document['Doctors'].append(email)
+        document['NoOfDoctors'] += 1
+        
+        WardDetail_collection.update_one(query, {"$set": document})
+
+        print("Updated Document:", document)
+    else:
+        print("Document not found")
+        return Response({'message': 'WardDetails Collection Cannot find.'})
+
+    return Response({'message': 'Doctor cadded successfully'})
 
 @api_view(['POST'])
 def addConsultant(request):
@@ -178,7 +167,13 @@ def addConsultant(request):
     specialization = (request.data.get('specialization'))
     wardNumber = (request.data.get('wardnumber'))
 
-    # print((wardName,wardNumber,Shifts,MaxLeaves,ConsecutiveShifts,NoOfDoctors))
+    ### Email already exists
+    query = {"email": email}
+    result = UserAuth_collection.find_one(query)
+    if result:
+        return Response({'error': 'Email'})
+    
+    ### Add doctor to 'User-Consultant' Collection
     consultant_data = {
         'email': email,
         'position': position,
@@ -190,20 +185,22 @@ def addConsultant(request):
         'Degree':degree,
         'Specialization':specialization,
     }
+    UserConsultant_collection.insert_one(consultant_data)
 
+    ### Add doctor to 'UserAuth' Collection
     UserAuth_Consultant = {
         'email':email,
         'password': password,
         'type': 'Consultant',
         'name': fullName,
     }
-
-    UserConsultant_collection.insert_one(consultant_data)
     UserAuth_collection.insert_one(UserAuth_Consultant)
+
     return Response({'message': 'Consultant added successfully'})
 
 @api_view(['POST'])
 def changeData(request):
+    ##### Not Completed Yet #####
     mobileNo = request.data.get('Mobile')
     email = (request.data.get('Email'))
     address = (request.data.get('Address'))
@@ -232,7 +229,7 @@ def getScheduleForDoctor(request):
         pass
     else:
         print('Doctor schedule not found in database')
-        return JsonResponse({'message': 'No schedule found'}, status=404)
+        return JsonResponse({'message': 'No schedule found'})
 
     result = dict()
     result['topic'] = Schedule_details['wardID']+' | '+Schedule_details['wardName']
@@ -294,6 +291,49 @@ def consViewDoctors(request):
             return JsonResponse({'message': 'Consultant not found'}, status=404)
     
     return JsonResponse({'message': 'Invalid user type'}, status=400)
+
+@api_view(['POST'])
+def conViwAllDocDetails(request):
+    user_type = request.data.get('type')
+    email = request.data.get('email')
+
+    if user_type == "Consultant":
+        consultant = UserConsultant_collection.find_one({'email': email},{'wardNumber':1})
+
+        if consultant:
+            ward_number = consultant['wardNumber']
+            doctors_in_wards = list(UserDoctor_collection.find({'wardNumber': ward_number},{'_id':0}))
+            
+            if doctors_in_wards:
+                return Response(doctors_in_wards)
+            else:
+                return JsonResponse({'message': 'No doctors found in this ward'})
+        else:
+            return JsonResponse({'message': 'Consultant not found'})
+    
+    return JsonResponse({'message': 'Invalid user type'})   
+
+
+@api_view(['POST'])
+def conViwAllConDetails(request):
+    user_type = request.data.get('type')
+    email = request.data.get('email')
+
+    if user_type == "Consultant":
+        consultant = UserConsultant_collection.find_one({'email': email},{'wardNumber':1})
+
+        if consultant:
+            ward_number = consultant['wardNumber']
+            con_in_wards = list(UserConsultant_collection.find({'wardNumber': ward_number},{'_id':0}))
+            
+            if con_in_wards:
+                return Response(con_in_wards)
+            else:
+                return JsonResponse({'message': 'No consultants found in this ward'})
+        else:
+            return JsonResponse({'message': 'Consultant not found'})
+    
+    return JsonResponse({'message': 'Invalid user type'})   
 
 @api_view(['POST'])
 def consViewConsultants(request):
@@ -372,7 +412,72 @@ def getScheduleForWard(request):
     else:
         print('Doctor schedule not found')
         return JsonResponse({'message': 'No schedule found'}, status=404)
+
+@api_view(['POST'])
+def leaveResponse(request):
+
+    ### Update 'LeaveRequests' Collection
+    query = {
+        "Status": "NoResponse",
+        "Name": request.data["name"],
+        "Date": request.data["date"],
+        "FromTime": request.data["fromTime"]
+    }
+    document = LeaveRequests_collection.find_one(query)
+
+    if document:
+        document['Status'] = request.data["status"]
+        LeaveRequests_collection.update_one(query, {"$set": document})
+        print("Updated Document:", document)
+    else:
+        print("Document not found")
+        return Response({'message': 'LeaveRequests Collection Cannot find.'})
+
+    return JsonResponse({'message': 'Leave response saved successfully'})
+
+@api_view(['POST'])
+def leaveRequests(request):
+
+    query_conditions = [
+        {'Status': "Accepted"},
+        {'Status': "Rejected"},
+    ]
+    if request.data['type'] == "Consultant":
+        consultant_collection = UserConsultant_collection
+
+    current_consultant = consultant_collection.find_one({'email': request.data['email']})
+    if current_consultant:
+        ward_numbers = [current_consultant.get('wardNumber', [])]
     
+    result = dict()
+    result['historyDetails'] = []
+    result['reqDetails'] = []
+    
+    for condition in query_conditions:
+        # Use list comprehension to convert ObjectId to string
+        documents = list(LeaveRequests_collection.find({'wardNumber': {'$in': ward_numbers}, **condition}))
+        converted_documents = [
+            {k: str(v) if isinstance(v, ObjectId) else v for k, v in doc.items()} 
+            for doc in documents
+        ]
+        result['historyDetails'].append(converted_documents)
+        result['historyDetails'] = [item for sublist in result['historyDetails'] for item in (sublist if isinstance(sublist, list) else [sublist])]
+
+    # pending leave requests
+    condition = {'Status': "NoResponse"}
+    documents = list(LeaveRequests_collection.find({'wardNumber': {'$in': ward_numbers}, **condition}))
+    converted_documents = [
+        {k: str(v) if isinstance(v, ObjectId) else v for k, v in doc.items()} 
+        for doc in documents
+    ]
+    result['reqDetails'].append(converted_documents)
+    result['reqDetails'] = [item for sublist in result['reqDetails'] for item in (sublist if isinstance(sublist, list) else [sublist])]
+
+    if any(result['historyDetails']):
+        return JsonResponse(result)
+    else:
+        return JsonResponse(None, safe=False)
+   
 ##### All users views #####
 
 @api_view(['POST'])
@@ -398,4 +503,5 @@ def view_profile(request):
         return Response(profile_details)
     else:
         return JsonResponse(None)
+    
     
