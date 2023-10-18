@@ -3,6 +3,10 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from pymongo import MongoClient
 from django.http import HttpResponse
+from hashing import checkPassword
+# from django.http import JsonResponse
+import jwt
+import datetime
 
 uri = "mongodb+srv://sithumv:atYiYnBqom0ZrQXt@rostermatedb.n9yfrig.mongodb.net/"
 
@@ -41,3 +45,5 @@ def user_login(request):
 
 #     return HttpResponse("Data added to the collection.")
 
+
+    return Response(routes)

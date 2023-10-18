@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from pymongo import MongoClient
 from django.http import JsonResponse
 from bson import ObjectId
+from hashing import hash_password
 
 from .models import LeaveRequests_collection
 from .models import UserDoctor_collection
@@ -185,7 +186,8 @@ def addDoctor(request):
     specialization = (request.data.get('specialization'))
     wardNumber = (request.data.get('wardnumber'))
 
-    # print((wardName,wardNumber,Shifts,MaxLeaves,ConsecutiveShifts,NoOfDoctors))
+    hashedPassword = hash_password(password)
+
     doctor_data = {
         'email': email,
         'position': position,
@@ -201,7 +203,7 @@ def addDoctor(request):
 
     UserAuth_Doctor = {
         'email':email,
-        'password': password,
+        'password': hashedPassword,
         'type': 'Doctor',
         'name': fullName,
     }
