@@ -13,12 +13,15 @@ urlpatterns = [
     path('addWard', views.addWard, name='addWard') ,
     path('addDoctor', views.addDoctor, name='addDoctor') ,
     path('addConsultant', views.addConsultant, name='addConsultant') ,
+    path('adminViwAllDocDetails', views.adminViwAllDocDetails, name='adminViwAllDocDetails') ,
+    path('adminViwAllConDetails', views.adminViwAllConDetails, name='adminViwAllConDetails') ,
 
-    path('sendWardDetails', views.sendWardDetails, name='sendWardDetails') ,
     # Doctor
     path('getScheduleForDoctor', views.getScheduleForDoctor, name='getScheduleForDoctor') ,
     path('docLeaveReqHistory', views.docLeaveReqHistory, name='docLeaveReqHistory') ,
     path('docLeaveReq', views.docLeaveReq, name='docLeaveReq') ,
+    path('getShiftOptions', views.getShiftOptions, name='getShiftOptions') ,
+    path('sendWardDetails', views.sendWardDetails, name='sendWardDetails') ,
 
 
     # Consultant
