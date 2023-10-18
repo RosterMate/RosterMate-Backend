@@ -16,6 +16,32 @@ from database_Connection import db
 ##### Admin views #####
 
 @api_view(['POST'])
+def adminViwAllDocDetails(request):
+    user_type = request.data.get('type')
+
+    if user_type == "Admin":
+        doctors_in_wards = list(UserDoctor_collection.find({},{'_id':0}))
+        if doctors_in_wards:
+            return Response(doctors_in_wards)
+        else:
+            return JsonResponse({'message': 'No doctors found in this ward'})
+    
+    return JsonResponse({'message': 'Invalid user type'})   
+
+@api_view(['POST'])
+def adminViwAllConDetails(request):
+    user_type = request.data.get('type')
+
+    if user_type == "Admin":
+        con_in_wards = list(UserConsultant_collection.find({},{'_id':0}))
+        if con_in_wards:
+            return Response(con_in_wards)
+        else:
+            return JsonResponse({'message': 'No consultants found in this ward'})
+    
+    return JsonResponse({'message': 'Invalid user type'})   
+
+@api_view(['POST'])
 def wardDetails(request):
 
     projection = {'wardName': 1, 'NoOfDoctors': 1}
@@ -83,17 +109,6 @@ def addWard(request):
     WardDetail_collection.insert_one(ward_data)
 
     return Response({'message': 'Ward added successfully'})
-
-
-
-@api_view(['POST'])
-def sendWardDetails(request):
-    projection = {'wardName': 1, 'wardNumber': 1}
-    ward_details = [{'wardName': i['wardName'], 'wardNumber': i['wardNumber']} for i in WardDetail_collection.find({}, projection)]
-    if ward_details:
-        return Response(ward_details)
-    else:
-        return JsonResponse(None)
 
 @api_view(['POST'])
 def addDoctor(request):
@@ -218,6 +233,36 @@ def changeData(request):
 ##### Doctor views #####
 
 @api_view(['POST'])
+def getShiftOptions(request):
+
+    if request.data['type'] != "Doctor":
+        return JsonResponse({'message': 'Invalid user type', 'status': 'error'})
+
+    # find ward number of the doctor
+    projection = {'wardNumber': 1,'_id':0}
+    ward = UserDoctor_collection.find_one({'email':request.data['email']}, projection)
+
+    # find number of shifts of the ward
+    projection = {'Shifts': 1,'_id':0}
+    shifts = WardDetail_collection.find_one(ward, projection)
+
+    if shifts['Shifts'] == 2:
+        return JsonResponse({'shifts': ['morning','night']})
+    elif shifts['Shifts'] == 3:
+        return JsonResponse({'shifts': ['morning','evening','night']})
+    else:
+        return JsonResponse({'message': 'Invalid number of shifts', 'status': 'error'})
+
+@api_view(['POST'])
+def sendWardDetails(request):
+    projection = {'wardName': 1, 'wardNumber': 1}
+    ward_details = [{'wardName': i['wardName'], 'wardNumber': i['wardNumber']} for i in WardDetail_collection.find({}, projection)]
+    if ward_details:
+        return Response(ward_details)
+    else:
+        return JsonResponse(None)
+
+@api_view(['POST'])
 def getScheduleForDoctor(request):
 
     #print(request.data)
@@ -275,19 +320,26 @@ def docLeaveReq(request):
     if request.data['type'] != "Doctor":
         return JsonResponse({'message': 'Invalid user type', 'status': 'error'})
     
+    # find doctor name and wardnumber of the doctor
+    projection = {'wardNumber': 1,'name':1,'_id':0}
+    docDetails = UserDoctor_collection.find_one({'email':request.data['email']}, projection)
+
     leave_req_document = {
     'email': request.data['email'], 
-    #'fromDate': request.data['fromDate'],
-    #'toDate': request.data['toDate'],
+    "Name": docDetails['name'],
+    'FromDate': request.data['fromDate'],
+    'FromShift': request.data['fromShift'],
+    'ToDate': request.data['toDate'],
+    'ToShift': request.data['toShift'],
     'Reason': request.data['reason'],
     "Status": "NoResponse",
+    "wardNumber": docDetails['wardNumber'],
 
-    "Name": "temp",
     "Date": "temp",
     "FromTime": "temp",
     "ToTime": "temp",
-    "wardNumber": "temp"
     }
+    
 
     # Insert the document into the collection
     LeaveRequests_collection.insert_one(leave_req_document)
@@ -310,10 +362,16 @@ def docLeaveReqHistory(request):
     
     for condition in query_conditions:
 
-        documents = [{'email': i['email'], 'Name': i['Name'],'Date':i['Date'],"FromTime":i["FromTime"],  "ToTime": i["ToTime"],
-  "Reason": i["Reason"],
-  "Status": i["Status"],
-  "wardNumber": i["Status"]} for i in LeaveRequests_collection.find(condition, {'_id':0})]
+        documents = [{'email': i['email'], 
+                        'Name': i['Name'],
+                        "FromDate":i["FromDate"], 
+                        "FromShift":i["FromShift"], 
+                        "ToDate":i["ToDate"], 
+                        "ToShift":i["ToShift"], 
+                        "Reason": i["Reason"],
+                        "Status": i["Status"],
+                        "wardNumber": i["Status"],
+                        } for i in LeaveRequests_collection.find(condition, {'_id':0})]
 
 
 
@@ -472,15 +530,17 @@ def leaveResponse(request):
     query = {
         "Status": "NoResponse",
         "Name": request.data["name"],
-        "Date": request.data["date"],
-        "FromTime": request.data["fromTime"]
+        "FromDate": request.data["fromDate"],
+        "FromShift": request.data["fromShift"],
+        "ToDate": request.data["toDate"],
+        "ToShift": request.data["toShift"],
     }
     document = LeaveRequests_collection.find_one(query)
 
     if document:
         document['Status'] = request.data["status"]
         LeaveRequests_collection.update_one(query, {"$set": document})
-        print("Updated Document:", document)
+        #print("Updated Document:", document)
     else:
         print("Document not found")
         return Response({'message': 'LeaveRequests Collection Cannot find.'})
