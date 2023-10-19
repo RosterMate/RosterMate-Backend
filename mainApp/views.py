@@ -349,7 +349,7 @@ def consViewDoctors(request):
         
         if consultant:
             ward_number = consultant.get('wardNumber')
-            doctors_in_wards = list(UserDoctor_collection.find({'wardNumber': ward_number}, projection={'_id': 0, 'img': 1, 'name': 1, 'position': 1}))
+            doctors_in_wards = list(UserDoctor_collection.find({'wardNumber': ward_number}, projection={'_id': 0, 'img': 1, 'name': 1, 'position': 1,'email':1,'address':1,'wardNumber':1,'Degree':1,'mobile':1}))
             
             if doctors_in_wards:
                 return Response(doctors_in_wards)
@@ -371,7 +371,6 @@ def conViwAllDocDetails(request):
         if consultant:
             ward_number = consultant['wardNumber']
             doctors_in_wards = list(UserDoctor_collection.find({'wardNumber': ward_number},{'_id':0}))
-            
             if doctors_in_wards:
                 return Response(doctors_in_wards)
             else:
@@ -413,8 +412,8 @@ def consViewConsultants(request):
         
         if consultant:
             ward_number = consultant.get('wardNumber')
-            doctors_in_wards = list(UserConsultant_collection.find({'wardNumber': ward_number}, projection={'_id': 0, 'img': 1, 'name': 1, 'position': 1}))
-            
+            doctors_in_wards = list(UserConsultant_collection.find({'wardNumber': ward_number}, projection={'_id': 0, 'img': 1, 'name': 1, 'position': 1,'email':1,'address':1,'wardNumber':1,'Degree':1,'mobile':1}))
+            print(doctors_in_wards)
             if doctors_in_wards:
                 return Response(doctors_in_wards)
             else:
