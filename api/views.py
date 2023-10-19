@@ -27,6 +27,7 @@ def user_login(request):
             'isAuthenticated': True,
             'USERTYPE': user['type'],
             'NAME': user['name'],
+            'USEREMAIL': request.data['email'],
             'token': jwt_token
         }
         return Response(data)

@@ -6,6 +6,7 @@ from django.http import JsonResponse
 from bson import ObjectId
 
 from .models import LeaveRequests_collection
+from .models import UserAdmin_collection
 from .models import UserDoctor_collection
 from .models import UserConsultant_collection
 from .models import WardDetail_collection
@@ -322,7 +323,6 @@ def getScheduleForDoctor(request):
             
             result['schedule'].append(new)        
 
-    print("num of shifts = ",len(result['schedule']))
     if result:
         print('Doctor schedule found')
         return JsonResponse(result)
@@ -471,7 +471,7 @@ def consViewConsultants(request):
         if consultant:
             ward_number = consultant.get('wardNumber')
             doctors_in_wards = list(UserConsultant_collection.find({'wardNumber': ward_number}, projection={'_id': 0, 'img': 1, 'name': 1, 'position': 1,'email':1,'address':1,'wardNumber':1,'Degree':1,'mobile':1}))
-            print(doctors_in_wards)
+
             if doctors_in_wards:
                 return Response(doctors_in_wards)
             else:
@@ -611,11 +611,11 @@ def leaveRequests(request):
 def view_profile(request):
 
     if request.data['type'] == "Admin":
-        profile_details_collection = db['User-Admin']
+        profile_details_collection = UserAdmin_collection
     elif request.data['type'] == "Doctor":
-        profile_details_collection = db['User-Doctor']
+        profile_details_collection = UserDoctor_collection
     elif request.data['type'] == "Consultant":
-        profile_details_collection = db['User-Consultant']
+        profile_details_collection = UserConsultant_collection
 
     projection = {'img': 1,
     'name': 1,
