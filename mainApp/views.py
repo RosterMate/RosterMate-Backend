@@ -43,10 +43,26 @@ def adminViwAllConDetails(request):
 
 @api_view(['POST'])
 def wardDetails(request):
+    ward_details = []
+    projection = {'wardName': 1, 'NoOfDoctors': 1, 'wardNumber': 1, 'Doctors': 1}
+    wards = WardDetail_collection.find({}, projection)
+    
+    for ward in wards:
+        ward_data = {
+            'wardName': ward['wardName'],
+            'NoOfDoctors': ward['NoOfDoctors'],
+            'wardNumber': ward['wardNumber'],
+            'Doctors': []
+        }
 
-    projection = {'wardName': 1, 'NoOfDoctors': 1}
-    ward_details = [{'wardName': i['wardName'], 'NoOfDoctors': i['NoOfDoctors']} for i in WardDetail_collection.find({}, projection)]
+        if 'Doctors' in ward and isinstance(ward['Doctors'], list):
+            for doctor_email in ward['Doctors']:
+                # Query your userDoctor collection to find the doctor name by email
+                doctor = UserDoctor_collection.find_one({'email': doctor_email})
+                if doctor:
+                    ward_data['Doctors'].append(doctor['name'])
 
+        ward_details.append(ward_data)
     if ward_details:
         return Response(ward_details)
     else:
@@ -55,8 +71,8 @@ def wardDetails(request):
 @api_view(['POST'])
 def doctorDetails(request):
     
-    projection = {'name': 1, 'position': 1,'img':1}
-    doctor_details = [{'name': i['name'], 'position': i['position'],'img':i['img']} for i in UserDoctor_collection.find({}, projection)]
+    projection = {'name': 1, 'position': 1,'img':1,'email':1,'address':1,'wardNumber':1,'Degree':1,'mobile':1}
+    doctor_details = [{'name': i['name'], 'position': i['position'],'img':i['img'],'email':i['email'],'address':i['address'],'wardNumber':i['wardNumber'],'Degree':i['Degree'],'mobile':i['mobile']} for i in UserDoctor_collection.find({}, projection)]
 
     if doctor_details:
         return Response(doctor_details)
@@ -66,8 +82,8 @@ def doctorDetails(request):
 @api_view(['POST'])
 def consultantDetails(request):
 
-    projection = {'name': 1, 'position': 1,'img':1}
-    consultant_details = [{'name': i['name'], 'position': i['position'],'img':i['img']} for i in UserConsultant_collection.find({}, projection)]
+    projection = {'name': 1, 'position': 1,'img':1,'email':1,'address':1,'wardNumber':1,'Degree':1,'mobile':1}
+    consultant_details = [{'name': i['name'], 'position': i['position'],'img':i['img'],'email':i['email'],'address':i['address'],'wardNumber':i['wardNumber'],'Degree':i['Degree'],'mobile':i['mobile']} for i in UserConsultant_collection.find({}, projection)]
 
     if consultant_details:
         return Response(consultant_details)
@@ -391,7 +407,7 @@ def consViewDoctors(request):
         
         if consultant:
             ward_number = consultant.get('wardNumber')
-            doctors_in_wards = list(UserDoctor_collection.find({'wardNumber': ward_number}, projection={'_id': 0, 'img': 1, 'name': 1, 'position': 1}))
+            doctors_in_wards = list(UserDoctor_collection.find({'wardNumber': ward_number}, projection={'_id': 0, 'img': 1, 'name': 1, 'position': 1,'email':1,'address':1,'wardNumber':1,'Degree':1,'mobile':1}))
             
             if doctors_in_wards:
                 return Response(doctors_in_wards)
@@ -413,7 +429,6 @@ def conViwAllDocDetails(request):
         if consultant:
             ward_number = consultant['wardNumber']
             doctors_in_wards = list(UserDoctor_collection.find({'wardNumber': ward_number},{'_id':0}))
-            
             if doctors_in_wards:
                 return Response(doctors_in_wards)
             else:
@@ -455,8 +470,8 @@ def consViewConsultants(request):
         
         if consultant:
             ward_number = consultant.get('wardNumber')
-            doctors_in_wards = list(UserConsultant_collection.find({'wardNumber': ward_number}, projection={'_id': 0, 'img': 1, 'name': 1, 'position': 1}))
-            
+            doctors_in_wards = list(UserConsultant_collection.find({'wardNumber': ward_number}, projection={'_id': 0, 'img': 1, 'name': 1, 'position': 1,'email':1,'address':1,'wardNumber':1,'Degree':1,'mobile':1}))
+            print(doctors_in_wards)
             if doctors_in_wards:
                 return Response(doctors_in_wards)
             else:
