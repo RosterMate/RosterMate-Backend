@@ -1,18 +1,11 @@
 from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from pymongo import MongoClient
 from django.http import JsonResponse
 from bson import ObjectId
 
-from .models import LeaveRequests_collection
-from .models import UserAdmin_collection
-from .models import UserDoctor_collection
-from .models import UserConsultant_collection
-from .models import WardDetail_collection
-from .models import UserAuth_collection
+from .models import *
 
-from database_Connection import db
 
 ##### Admin views #####
 
@@ -283,9 +276,8 @@ def sendWardDetails(request):
 def getScheduleForDoctor(request):
 
     #print(request.data)
-    Schedule_collection = db['TimeTable-Doctor']
     projection = {'shifts': 1, '_id':0, 'wardID':1,'wardName':1,'numOfShifts':1}
-    Schedule_details = Schedule_collection.find_one({'email':request.data['email'], 'y-m': request.data['ym']}, projection)
+    Schedule_details = TimeTable_collection.find_one({'email':request.data['email'], 'y-m': request.data['ym']}, projection)
 
     if Schedule_details:
         pass
@@ -483,22 +475,18 @@ def consViewConsultants(request):
 @api_view(['POST'])
 def getScheduleForWard(request):
     
-    Ward = db['User-Consultant']
     projection = {'wardNumber': 1, '_id':0}
-    Ward = Ward.find_one({'email':request.data['email']}, projection)
+    Ward = UserConsultant_collection.find_one({'email':request.data['email']}, projection)
 
-
-    doctor_details = db['WardDetails']
     projection = {'_id':0, 'Doctors':1,'wardName':1}
-    doctor_details = doctor_details.find_one({'wardNumber':Ward['wardNumber']}, projection)
+    doctor_details = WardDetail_collection.find_one({'wardNumber':Ward['wardNumber']}, projection)
 
     result = dict()
     result['wardName'] = doctor_details['wardName']
     result['schedule'] = []
-    schedule_details = db['TimeTable-Doctor']
     projection = {'_id':0, 'shifts':1,'name':1,'numOfShifts':1}
     for doctor in doctor_details['Doctors']:
-        schedule_detail = schedule_details.find_one({'email':doctor, 'y-m': request.data['ym']}, projection)
+        schedule_detail = TimeTable_collection.find_one({'email':doctor, 'y-m': request.data['ym']}, projection)
 
         if schedule_detail:
             new = dict()
@@ -608,6 +596,9 @@ def leaveRequests(request):
 @api_view(['POST'])
 def createSchedule(request):
     print(request.data)
+
+
+
 
     
     return JsonResponse({'message': 'Schedule created successfully'})
