@@ -438,7 +438,6 @@ def conViwAllDocDetails(request):
     
     return JsonResponse({'message': 'Invalid user type'})   
 
-
 @api_view(['POST'])
 def conViwAllConDetails(request):
     user_type = request.data.get('type')
@@ -604,7 +603,15 @@ def leaveRequests(request):
         return JsonResponse(result)
     else:
         return JsonResponse(None, safe=False)
-   
+
+
+@api_view(['POST'])
+def createSchedule(request):
+    print(request.data)
+
+    
+    return JsonResponse({'message': 'Schedule created successfully'})
+
 ##### All users views #####
 
 @api_view(['POST'])

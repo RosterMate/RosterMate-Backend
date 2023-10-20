@@ -2,7 +2,8 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    
+
+    # All users
     path('view_profile', views.view_profile, name='view_profile') ,
     path('changeData', views.changeData, name='changeData') ,
 
@@ -32,4 +33,5 @@ urlpatterns = [
     path('leaveResponse', views.leaveResponse, name='leaveResponse') ,
     path('conViwAllDocDetails', views.conViwAllDocDetails, name='conViwAllDocDetails') ,
     path('conViwAllConDetails', views.conViwAllConDetails, name='conViwAllConDetails') ,
+    path('createSchedule', views.createSchedule, name='createSchedule') ,
 ]
