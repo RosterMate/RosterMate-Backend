@@ -34,4 +34,5 @@ urlpatterns = [
     path('conViwAllDocDetails', views.conViwAllDocDetails, name='conViwAllDocDetails') ,
     path('conViwAllConDetails', views.conViwAllConDetails, name='conViwAllConDetails') ,
     path('createSchedule', views.createSchedule, name='createSchedule') ,
+    path('getScheduleConstraints', views.getScheduleConstraints, name='getScheduleConstraints') ,
 ]

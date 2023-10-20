@@ -23,29 +23,33 @@ class Scheduler:
         #                                - [date, shift1, shift2, ...],[date, shift1, shift2, ...]
         #                                - shift1, shift2, ... are the shifts that doctor want a leave
 
-
+        other_doctors = []
         for doc in self.doctors_details:
-
-            if len(self.assignment[doc[0]]) >= shifts_per_doc_count+self.consecutive_shifts:
-                #print('maximum shifts allocated for',doc[0])
-                continue
 
             for d in doc[1:]:
                 if self.is_a_leave(date,self.shift_types[shift_number], d[0], d[1:]):
                     #print('Doctor id =',doc[0],'Date =',date,'Shift =',self.shift_types[shift_number])
                     break
             else:
+
+                if len(self.assignment[doc[0]]) >= shifts_per_doc_count+self.consecutive_shifts:
+                    other_doctors.append(doc[0])
+                    continue
                 self.assignment[doc[0]].append((date,self.shift_types[shift_number]))
                 candidates.append(doc[0])
 
-                if num_doctors[self.shift_types[shift_number]] == len(candidates):
+                if self.num_doctors[self.shift_types[shift_number]] == len(candidates):
                     break
 
         #random.shuffle(candidates)
 
-
-        if num_doctors[self.shift_types[shift_number]] != len(candidates):
-            return -1
+        while self.num_doctors[self.shift_types[shift_number]] != len(candidates) and len(other_doctors) != 0:
+            candidates.append(other_doctors.pop())
+        
+        if self.num_doctors[self.shift_types[shift_number]] != len(candidates):
+            print("Need",self.num_doctors[self.shift_types[shift_number]] - len(candidates),"more doctors for",self.shift_types[shift_number],"shift on",date )
+            #return -1
+        
         return candidates
 
     def calculate_shifts_per_doc(self):
@@ -85,13 +89,11 @@ class Scheduler:
         for doctor_detail in self.doctors_details:
             self.assignment[doctor_detail[0]] = []
 
-
         # shifts = [ [date 1, shift 1, shift 2, shift 3], ...]
         #             shift 1 = [doctor id 1, doctor id 2]
         #             shift 2 = [doctor id 1, doctor id 2, ...]
 
         #number_of_doctors = len(self.doctors_details)
-
 
         shifts_per_doc_count = 0
 
@@ -104,12 +106,13 @@ class Scheduler:
                     shifts_per_doc_count = self.calculate_shifts_per_doc()
                     
         #print('assignment =',self.assignment)
-        print('Assignment =>')
-        for key in self.assignment:
-            print('doctor id:',key,'|',len(self.assignment[key]),':',self.assignment[key])
-            print()
+        #print('Assignment =>')
+        #for key in self.assignment:
+        #    print('doctor id:',key,'|',len(self.assignment[key]),':',self.assignment[key])
+        #    print()
 
-        return shifts
+        #return shifts
+        return self.assignment
         
 if __name__ == "__main__":
 

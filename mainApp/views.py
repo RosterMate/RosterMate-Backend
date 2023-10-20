@@ -5,6 +5,7 @@ from django.http import JsonResponse
 from bson import ObjectId
 
 from .models import *
+from Scheduler import Scheduler
 
 
 ##### Admin views #####
@@ -275,52 +276,67 @@ def sendWardDetails(request):
 @api_view(['POST'])
 def getScheduleForDoctor(request):
 
-    #print(request.data)
-    projection = {'shifts': 1, '_id':0, 'wardID':1,'wardName':1,'numOfShifts':1}
-    Schedule_details = TimeTable_collection.find_one({'email':request.data['email'], 'y-m': request.data['ym']}, projection)
-
-    if Schedule_details:
-        pass
-    else:
-        print('Doctor schedule not found in database')
-        return JsonResponse({'message': 'No schedule found'})
-
     result = dict()
-    result['topic'] = Schedule_details['wardID']+' | '+Schedule_details['wardName']
     result['schedule'] = []
-    
-    for i in Schedule_details['shifts']:
-        for time in i['time']:
-            new = dict()
-            new['Subject'] = Schedule_details['wardID']+' | '+Schedule_details['wardName']+" | "+time
 
-            if Schedule_details['numOfShifts'] == 3:
-                if time == 'morning':
-                    new['StartTime'] = request.data['ym']+'-'+i['date']+'T07:00'
-                    new['EndTime'] = request.data['ym']+'-'+i['date']+'T13:30'
-                elif time == 'evening':
-                    new['StartTime'] = request.data['ym']+'-'+i['date']+'T13:30'
-                    new['EndTime'] = request.data['ym']+'-'+i['date']+'T20:00'
-                elif time == 'night':
-                    new['StartTime'] = request.data['ym']+'-'+i['date']+'T20:00'
-                    new['EndTime'] = request.data['ym']+'-'+str(int(i['date'])+1)+'T07:00'
+    yearMonth = request.data['ym'].split('-')
+    month = str(int(yearMonth[1])-1)
+    if len(month) == 1:
+        month = '0'+month
+    yearMonth = yearMonth[0]+'-'+ month
 
-            elif Schedule_details['numOfShifts'] == 2:
-                if time == 'morning':
-                    new['StartTime'] = request.data['ym']+'-'+i['date']+'T08:00'
-                    new['EndTime'] = request.data['ym']+'-'+i['date']+'T16:30'
-                elif time == 'night':
-                    new['StartTime'] = request.data['ym']+'-'+i['date']+'T16:30'
-                    new['EndTime'] = request.data['ym']+'-'+str(int(i['date'])+1)+'T08:00'
-            
-            result['schedule'].append(new)        
+    #print(request.data)
+    for _ in range(2):
+        yearMonth = request.data['ym'].split('-')
+        yearMonth = yearMonth[0]+'-'+ month
+        yearMonth = yearMonth.split('-')
+        month = str(int(yearMonth[1])+1)
+        if len(month) == 1:
+            month = '0'+month
+        yearMonth = yearMonth[0]+'-'+ month
+        
+        projection = {'shifts': 1, '_id':0, 'wardID':1,'wardName':1,'numOfShifts':1}
+        Schedule_details = TimeTable_collection.find_one({'email':request.data['email'], 'y-m': yearMonth}, projection)
 
+        if Schedule_details:
+            pass
+        else:
+            continue
+        
+        result['topic'] = Schedule_details['wardID']+' | '+Schedule_details['wardName']
+
+        for i in Schedule_details['shifts']:
+            for time in i['time']:
+                new = dict()
+                new['Subject'] = Schedule_details['wardID']+' | '+Schedule_details['wardName']+" | "+time
+
+                if Schedule_details['numOfShifts'] == 3:
+                    if time == 'morning':
+                        new['StartTime'] = yearMonth+'-'+i['date']+'T07:00'
+                        new['EndTime'] = yearMonth+'-'+i['date']+'T13:30'
+                    elif time == 'evening':
+                        new['StartTime'] = yearMonth+'-'+i['date']+'T13:30'
+                        new['EndTime'] = yearMonth+'-'+i['date']+'T20:00'
+                    elif time == 'night':
+                        new['StartTime'] = yearMonth+'-'+i['date']+'T20:00'
+                        new['EndTime'] = yearMonth+'-'+str(int(i['date'])+1)+'T07:00'
+
+                elif Schedule_details['numOfShifts'] == 2:
+                    if time == 'morning':
+                        new['StartTime'] = yearMonth+'-'+i['date']+'T08:00'
+                        new['EndTime'] = yearMonth+'-'+i['date']+'T16:30'
+                    elif time == 'night':
+                        new['StartTime'] = yearMonth+'-'+i['date']+'T16:30'
+                        new['EndTime'] = yearMonth+'-'+str(int(i['date'])+1)+'T08:00'
+                
+                result['schedule'].append(new)   
+         
     if result:
         print('Doctor schedule found')
         return JsonResponse(result)
     else:
         print('Doctor schedule not found')
-        return JsonResponse({'message': 'No schedule found'}, status=404)
+        return JsonResponse({'message': 'No schedule found','status':'error'}, )
 
 @api_view(['POST'])
 def docLeaveReq(request):
@@ -353,7 +369,6 @@ def docLeaveReq(request):
     LeaveRequests_collection.insert_one(leave_req_document)
 
     return JsonResponse({'message': 'Leave request sent successfully',  'status': 'success'})
-
 
 @api_view(['POST'])
 def docLeaveReqHistory(request):
@@ -399,7 +414,7 @@ def consViewDoctors(request):
         
         if consultant:
             ward_number = consultant.get('wardNumber')
-            doctors_in_wards = list(UserDoctor_collection.find({'wardNumber': ward_number}, projection={'_id': 0, 'img': 1, 'name': 1, 'position': 1,'email':1,'address':1,'wardNumber':1,'Degree':1,'mobile':1}))
+            doctors_in_wards = list(UserDoctor_collection.find({'wardNumber': ward_number}, {'_id': 0, 'img': 1, 'name': 1, 'position': 1,'email':1,'address':1,'wardNumber':1,'Degree':1,'mobile':1}))
             
             if doctors_in_wards:
                 return Response(doctors_in_wards)
@@ -485,38 +500,51 @@ def getScheduleForWard(request):
     result['wardName'] = doctor_details['wardName']
     result['schedule'] = []
     projection = {'_id':0, 'shifts':1,'name':1,'numOfShifts':1}
-    for doctor in doctor_details['Doctors']:
-        schedule_detail = TimeTable_collection.find_one({'email':doctor, 'y-m': request.data['ym']}, projection)
 
-        if schedule_detail:
-            new = dict()
-            
-            for i in schedule_detail['shifts']:
-                for time in i['time']:
-                    new = dict()
-                    new['Subject'] = schedule_detail['name']+" | "+time
+    yearMonth = request.data['ym'].split('-')
+    month = str(int(yearMonth[1])-1)
+    if len(month) == 1:
+        month = '0'+month
+    yearMonth = yearMonth[0]+'-'+ month
+    for _ in range(2):
+        yearMonth = yearMonth.split('-')
+        month = str(int(yearMonth[1])+1)
+        if len(month) == 1:
+            month = '0'+month
+        yearMonth = yearMonth[0]+'-'+ month
+
+        for doctor in doctor_details['Doctors']:
+            schedule_detail = TimeTable_collection.find_one({'email':doctor, 'y-m': yearMonth}, projection)
+
+            if schedule_detail:
+                new = dict()
+                
+                for i in schedule_detail['shifts']:
+                    for time in i['time']:
+                        new = dict()
+                        new['Subject'] = schedule_detail['name']+" | "+time
 
 
-                    if schedule_detail['numOfShifts'] == 3:
-                        if time == 'morning':
-                            new['StartTime'] = request.data['ym']+'-'+i['date']+'T07:00'
-                            new['EndTime'] = request.data['ym']+'-'+i['date']+'T13:30'
-                        elif time == 'evening':
-                            new['StartTime'] = request.data['ym']+'-'+i['date']+'T13:30'
-                            new['EndTime'] = request.data['ym']+'-'+i['date']+'T20:00'
-                        elif time == 'night':
-                            new['StartTime'] = request.data['ym']+'-'+i['date']+'T20:00'
-                            new['EndTime'] = request.data['ym']+'-'+str(int(i['date'])+1)+'T07:00'
+                        if schedule_detail['numOfShifts'] == 3:
+                            if time == 'morning':
+                                new['StartTime'] = yearMonth+'-'+i['date']+'T07:00'
+                                new['EndTime'] = yearMonth+'-'+i['date']+'T13:30'
+                            elif time == 'evening':
+                                new['StartTime'] = yearMonth+'-'+i['date']+'T13:30'
+                                new['EndTime'] = yearMonth+'-'+i['date']+'T20:00'
+                            elif time == 'night':
+                                new['StartTime'] = yearMonth+'-'+i['date']+'T20:00'
+                                new['EndTime'] = yearMonth+'-'+str(int(i['date'])+1)+'T07:00'
 
-                    elif schedule_detail['numOfShifts'] == 2:
-                        if time == 'morning':
-                            new['StartTime'] = request.data['ym']+'-'+i['date']+'T08:00'
-                            new['EndTime'] = request.data['ym']+'-'+i['date']+'T16:30'
-                        elif time == 'night':
-                            new['StartTime'] = request.data['ym']+'-'+i['date']+'T16:30'
-                            new['EndTime'] = request.data['ym']+'-'+str(int(i['date'])+1)+'T08:00'
-                    
-                    result['schedule'].append(new)
+                        elif schedule_detail['numOfShifts'] == 2:
+                            if time == 'morning':
+                                new['StartTime'] = yearMonth+'-'+i['date']+'T08:00'
+                                new['EndTime'] = yearMonth+'-'+i['date']+'T16:30'
+                            elif time == 'night':
+                                new['StartTime'] = yearMonth+'-'+i['date']+'T16:30'
+                                new['EndTime'] = yearMonth+'-'+str(int(i['date'])+1)+'T08:00'
+                        
+                        result['schedule'].append(new)
     
     if result:
         print('Doctor schedule found')
@@ -592,16 +620,144 @@ def leaveRequests(request):
     else:
         return JsonResponse(None, safe=False)
 
+@api_view(['POST'])
+def getScheduleConstraints(request):
+    
+    email = request.data.get('email')
+    wardNumber = UserConsultant_collection.find_one({'email': email},{'wardNumber':1})['wardNumber']
+    ward = WardDetail_collection.find_one({'wardNumber': wardNumber},{'NoOfDoctors':1,'wardName':1,'_id':0})
+
+    if ward:
+        return JsonResponse(ward)
+    
+    return JsonResponse(None, safe=False)
 
 @api_view(['POST'])
 def createSchedule(request):
-    print(request.data)
+
+    user_type = request.data.get('type')
+    email = request.data.get('email')
+
+    # get doctors IDs and names in the same ward
+    if user_type == "Consultant":
+        consultant = UserConsultant_collection.find_one({'email': email})
+        
+        if consultant:
+            ward_number = consultant.get('wardNumber')
+            doctors_in_ward = {i['email']:i['name'] for i in  list(UserDoctor_collection.find({'wardNumber': ward_number},{'_id': 0, 'name': 1,'email':1}))}
+        else:
+            return JsonResponse({'message': 'Consultant not found', 'status': 'error'})
+    else:
+        return JsonResponse({'message': 'Invalid user type', 'status': 'error'})
 
 
 
-
+    if request.data['form']['shifts'] == '2':
+        shift_types = ["morning", "night"]
+        num_doctors = {"morning": int(request.data['form']['number1']), "night": int(request.data['form']['number3'])}
+    elif request.data['form']['shifts'] == '3':
+        shift_types = ["morning", "evening", "night"]
+        num_doctors = {"morning": int(request.data['form']['number1']), "evening": int(request.data['form']['number2']), "night": int(request.data['form']['number3'])}
+    else:
+        return JsonResponse({'message': 'shift_types error'  , 'status': 'error'})
     
-    return JsonResponse({'message': 'Schedule created successfully'})
+    consecutive_shifts = int(request.data['form']['consecutiveShifts'])
+    year = int(request.data['month'][:4])
+    month = int(request.data['month'][5:7])+1
+
+    leaves = list(LeaveRequests_collection.find({'wardNumber': ward_number,'Status':"Accepted"},{'_id': 0, 'name': 1,'email':1,"FromDate":1,"FromShift":1,"ToDate":1,"ToShift":1}))
+    ward_name = WardDetail_collection.find_one({'wardNumber': ward_number},{'_id':0,'wardName':1})['wardName']
+
+    doctors_details = [[i] for i in doctors_in_ward]
+
+    #print(doctors_details)
+    #print(leaves)
+
+    str_month = str(month)
+    if len(str_month) == 1:
+        str_month = '0'+str_month
+
+    ##### check if schedule already created #####
+    isScheduled = ScheduledMonths_collection.find_one({'wardID': ward_number,"y-m": str(year)+"-"+str_month},{})
+    if isScheduled:
+        print('Schedule already created. Deleting old schedule...')
+        TimeTable_collection.delete_many({'wardID': ward_number,"y-m": str(year)+"-"+str_month})
+        ScheduledMonths_collection.delete_one({'wardID': ward_number,"y-m": str(year)+"-"+str_month})
+        #return JsonResponse({'message': 'Schedule already created.',  'status': 'error'})
+    
+    for leave in leaves:
+        date1 = leave['FromDate'].split('-')
+        date2 = leave['ToDate'].split('-')
+
+        if date1[1] != str_month:
+            continue
+        
+        if request.data['form']['shifts'] == '2':
+            if leave['FromShift'] == 'evening':
+                leave['FromShift'] = 'morning'
+            if leave['ToShift'] == 'evening':
+                leave['ToShift'] = 'morning'
+        for i in doctors_details:
+            if i[0] == leave['email']:
+                i.append([date1[0]+'-'+date1[1]+"-"+date1[2],leave['FromShift']])
+                while date1[2] != date2[2] or leave['FromShift'] != leave['ToShift']:
+
+                    if request.data['form']['shifts'] == '3':
+                        if leave['FromShift'] == "morning":
+                            leave['FromShift'] = "evening"
+                        elif leave['FromShift'] == "evening":
+                            leave['FromShift'] = "night"
+                        else:
+                            leave['FromShift'] = "morning"
+                            date1[2] = str(int(date1[2])+1)
+                            if len(date1[2]) == 1:
+                                date1[2] = '0'+date1[2]
+                    else:
+                        if leave['FromShift'] == "morning":
+                            leave['FromShift'] = "night"
+                        else:
+                            leave['FromShift'] = "morning"
+                            date1[2] = str(int(date1[2])+1)
+                            if len(date1[2]) == 1:
+                                date1[2] = '0'+date1[2]
+
+                    i.append([date1[0]+'-'+date1[1]+"-"+date1[2],leave['FromShift']])
+                break
+    
+    scheduler = Scheduler(doctors_details, shift_types, num_doctors,consecutive_shifts, year, month)
+    schedule = scheduler.get_schedule_with_equal_shifts()
+
+    #print(schedule)
+
+    ##### insert schedule to database #####
+    for doc in doctors_in_ward:
+
+        document = {
+            "email": doc,
+            "wardID": ward_number,
+            "wardName": ward_name,
+            "name": doctors_in_ward[doc],
+            "y-m": str(year)+"-"+str_month,
+            "shifts": [],
+            "numOfShifts": int(request.data['form']['shifts'])
+        }
+
+        for temp in schedule[doc]:
+            d = temp[0].split('-')[-1]
+            if len(d) == 1:
+                d = '0'+d
+            document['shifts'].append({"date":d,"time":[temp[1]]})
+        
+        TimeTable_collection.insert_one(document)
+    
+    ##### insert scheduled month to database #####
+    document = {
+        "wardID": ward_number,
+        "y-m": str(year)+"-"+str_month
+    }
+    ScheduledMonths_collection.insert_one(document)
+    print('Schedule created successfully')
+    return JsonResponse({'message': 'Schedule created successfully',  'status': 'success'})
 
 ##### All users views #####
 
