@@ -1,8 +1,5 @@
-from django.shortcuts import render
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from pymongo import MongoClient
-from django.http import HttpResponse
 
 from database_Connection import db
 import jwt
