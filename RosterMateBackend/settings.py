@@ -52,6 +52,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'corsheaders.middleware.CorsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'RosterMateBackend.urls'
@@ -134,3 +135,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Allow all origins for development (be more restrictive in production)
 CORS_ALLOW_ALL_ORIGINS = True
+
+
+import dj_database_url
+
+prod_db=dj_database_url.config(conn_max_age=500)
+DATABASES['default'].update(prod_db)
