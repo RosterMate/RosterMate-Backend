@@ -1,0 +1,1 @@
+web: gunicorn RosterMateBackend.wsgi --log-file -
