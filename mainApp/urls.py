@@ -24,7 +24,6 @@ urlpatterns = [
     path('getShiftOptions', views.getShiftOptions, name='getShiftOptions') ,
     path('sendWardDetails', views.sendWardDetails, name='sendWardDetails') ,
 
-
     # Consultant
     path('consViewDoctors', views.consViewDoctors, name='consViewDoctors') ,
     path('consViewConsultants', views.consViewConsultants, name='consViewConsultants') ,
