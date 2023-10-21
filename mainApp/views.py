@@ -358,10 +358,6 @@ def docLeaveReq(request):
     'Reason': request.data['reason'],
     "Status": "NoResponse",
     "wardNumber": docDetails['wardNumber'],
-
-    "Date": "temp",
-    "FromTime": "temp",
-    "ToTime": "temp",
     }
     
 
