@@ -228,18 +228,46 @@ def addConsultant(request):
 
 @api_view(['POST'])
 def changeData(request):
-    ##### Not Completed Yet #####
+    email = request.data.get('Email')
+    address = request.data.get('Address')
     mobileNo = request.data.get('Mobile')
-    email = (request.data.get('Email'))
-    address = (request.data.get('Address'))
-    info = (request.data.get('Information'))
+    specialization = request.data.get('Specialization')
 
-    if request.data['Position'] == "Admin":
-        print('add data to admin collection')
-    elif request.data['Position'] == "Doctor":
-        print('add data to doctor collection')
-    elif request.data['Position'] == "Consultant":
-        print('add data to consultant collection')
+    if request.data['Type'] == "Admin":
+        user = UserAdmin_collection.find_one({"email": email})
+        if user:
+            pass
+        else:
+            return Response({'msg': 'error'})
+        user['mobile'] = mobileNo
+        user['address'] = address
+        user['Specialization'] = specialization
+        UserAdmin_collection.update_one({"email": email}, {"$set": user})
+
+    elif request.data['Type'] == "Doctor":
+        user = UserDoctor_collection.find_one({"email": email})
+        if user:
+            pass   
+        else:
+            return Response({'msg': 'error'})
+        user['mobile'] = mobileNo
+        user['address'] = address
+        user['Specialization'] = specialization
+        UserDoctor_collection.update_one({"email": email}, {"$set": user})
+        
+    elif request.data['Type'] == "Consultant":
+        user = UserConsultant_collection.find_one({"email": email})
+        if user:
+            pass
+        else:
+            return Response({'msg': 'error'})
+        user['mobile'] = mobileNo
+        user['address'] = address
+        user['Specialization'] = specialization
+        UserConsultant_collection.update_one({"email": email}, {"$set": user})
+    else:
+        print('Invalid user type')
+        return Response({'msg': 'error'})
     
     return Response({'message': 'Data changed successfully'})
 
@@ -792,9 +820,9 @@ def view_profile(request):
     'name': 1,
     'position': 1,
     'address': 1,
-    'information': 1,
+    'Specialization': 1,
     'mobile': 1,}
-    profile_details = [{'name': i['name'], 'position': i['position'],'img':i['img'],'address':i['address'],'mobile':i['mobile']} for i in profile_details_collection.find({'email':request.data['email']}, projection)][0]
+    profile_details = [{'name': i['name'], 'position': i['position'],'img':i['img'],'address':i['address'],'mobile':i['mobile'],'Specialization':i['Specialization']} for i in profile_details_collection.find({'email':request.data['email']}, projection)][0]
     #,'information':i['information'],
     
     if profile_details:
