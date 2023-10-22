@@ -6,6 +6,7 @@ urlpatterns = [
     # All users
     path('view_profile', views.view_profile, name='view_profile') ,
     path('changeData', views.changeData, name='changeData') ,
+    path('changePassword', views.changePassword, name='changePassword') ,
 
     # Admin
     path('wardDetails', views.wardDetails, name='wardDetails') ,

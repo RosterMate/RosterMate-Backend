@@ -243,6 +243,25 @@ def changeData(request):
     
     return Response({'message': 'Data changed successfully'})
 
+@api_view(['POST'])
+def changePassword(request):
+
+    user = UserAuth_collection.find_one({"email": request.data['email']})
+
+    if user:
+        pass
+    else:
+        return Response({'msg': 'error'})
+
+    if hashing.check_password(user['password'] , request.data['oldPassword']):
+        user['password'] = hashing.hash_password((request.data.get('newPassword')))
+
+        UserAuth_collection.update_one({"email": request.data['email']}, {"$set": user})
+
+        return Response({'msg': 'success'})
+
+    return Response({'msg': 'error'})
+
 ##### Doctor views #####
 
 @api_view(['POST'])
