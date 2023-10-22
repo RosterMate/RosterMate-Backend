@@ -6,6 +6,7 @@ from bson import ObjectId
 
 from .models import *
 from Scheduler import Scheduler
+import hashing
 
 
 ##### Admin views #####
@@ -41,7 +42,10 @@ def wardDetails(request):
     ward_details = []
     projection = {'wardName': 1, 'NoOfDoctors': 1, 'wardNumber': 1, 'Doctors': 1}
     wards = WardDetail_collection.find({}, projection)
-    
+
+    # Fetch all doctors at once
+    all_doctors = {doc['email']: doc['name'] for doc in UserDoctor_collection.find({},{'email':1,'name':1,'_id':0})}
+
     for ward in wards:
         ward_data = {
             'wardName': ward['wardName'],
@@ -52,16 +56,14 @@ def wardDetails(request):
 
         if 'Doctors' in ward and isinstance(ward['Doctors'], list):
             for doctor_email in ward['Doctors']:
-                # Query your userDoctor collection to find the doctor name by email
-                doctor = UserDoctor_collection.find_one({'email': doctor_email})
-                if doctor:
-                    ward_data['Doctors'].append(doctor['name'])
+                # Use the pre-fetched doctors data
+                if doctor_email in all_doctors:
+                    ward_data['Doctors'].append(all_doctors[doctor_email])
 
         ward_details.append(ward_data)
-    if ward_details:
-        return Response(ward_details)
-    else:
-        return JsonResponse(None)
+
+    return Response(ward_details) if ward_details else JsonResponse(None)
+
     
 @api_view(['POST'])
 def doctorDetails(request):
@@ -126,7 +128,7 @@ def addDoctor(request):
     fullName = request.data.get('fullname')
     mobileNo = request.data.get('mobileNo')
     email = (request.data.get('email'))
-    password = (request.data.get('password'))
+    password = hashing.hash_password((request.data.get('password')))
     address = (request.data.get('address'))
     position = (request.data.get('position'))
     degree = (request.data.get('degree'))
@@ -186,7 +188,7 @@ def addConsultant(request):
     fullName = request.data.get('fullname')
     mobileNo = request.data.get('mobileNo')
     email = (request.data.get('email'))
-    password = (request.data.get('password'))
+    password = hashing.hash_password((request.data.get('password')))
     address = (request.data.get('address'))
     position = (request.data.get('position'))
     degree = (request.data.get('degree'))
