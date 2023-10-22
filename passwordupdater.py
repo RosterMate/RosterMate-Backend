@@ -9,8 +9,8 @@ db = client['RosterMateDB']
 
 collection = db['UserAuth']
 
-email = 'vihanga00@gmail.com'
-new_password = '1234567890'
+email = 'sithumv@gmail.com'
+new_password = '123456'
 
 
 hashed_password = hashing.hash_password(new_password)

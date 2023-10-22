@@ -1,6 +1,7 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
+import hashing
 from database_Connection import db
 import jwt
 import datetime
@@ -14,7 +15,7 @@ def user_login(request):
     user = list(collection.find({"email": request.data['email']}))
     user = user[0]
 
-    if user['password'] == request.data['password'] and user['email'] == request.data['email']:
+    if hashing.check_password(user['password'] , request.data['password']) and user['email'] == request.data['email']:
         token_payload = {
             'id': str(user['_id']),
             'exp': datetime.datetime.utcnow() + datetime.timedelta(days = 1)
