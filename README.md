@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-RosterMate is a mobile-optimized web application developed as a group project by members [Thejan](https://github.com/thejanb), Sithum, and Ishan in October 2023. It is designed to assist hospitals in creating and managing schedules for healthcare professionals.
+RosterMate is a mobile-optimized web application developed as a group project by members [Thejan](https://github.com/thejanb), [Sithum](https://github.com/SVGamage), and Ishan in October 2023. It is designed to assist hospitals in creating and managing schedules for healthcare professionals.
 
 
 The application uses a combination of React for the frontend, Django for the backend, and MongoDB for the database. Firebase is used to host the frontend, while the backend is deployed on Heroku. MongoDB provides the database storage.
@@ -91,6 +91,9 @@ If you have questions or need assistance, you can contact the project developers
     - LinkedIn: [linkedin.com/in/thejan-weerasekara](https://www.linkedin.com/in/thejan-weerasekara)
     - GitHub: [github.com/ThejanB](https://github.com/ThejanB)
 - **Sithum Vihanga**
+    - Email: [sithumvgamage@gmail.com](mailto:sithumvgamage@gmail.com)
+    - LinkedIn: [linkedin.com/in/sithum-vihanga](https://www.linkedin.com/in/sithum-vihanga/)
+    - GitHub: [github.com/SVGamage](https://github.com/SVGamage)
 - **Ishan**
 
 Feel free to reach out with any inquiries or feedback.
