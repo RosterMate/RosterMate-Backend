@@ -226,6 +226,33 @@ def addConsultant(request):
 
     return Response({'message': 'Consultant added successfully'})
 
+
+@api_view(['POST'])
+def uploadImg(request):
+     
+    if request.data['image']:
+        pass
+    else:
+        return Response({'msg': 'no image data'})
+    
+    image = request.data['image']
+    email = request.data['email']
+    user_type = request.data['type']
+
+    if user_type == "Admin":
+        user = UserAdmin_collection.find_one({"email": email})
+        if user:
+            pass
+        else:
+            return Response({'msg': 'error'})
+        
+        user['img'] = image
+        print(user)
+        print(image)
+        #UserAdmin_collection.update_one({"email": email}, {"$set": user})
+    
+    return Response({'msg': 'Image changed successfully'})
+
 @api_view(['POST'])
 def changeData(request):
     email = request.data.get('Email')

@@ -7,6 +7,7 @@ urlpatterns = [
     path('view_profile', views.view_profile, name='view_profile') ,
     path('changeData', views.changeData, name='changeData') ,
     path('changePassword', views.changePassword, name='changePassword') ,
+    path('uploadImg', views.uploadImg, name='uploadImg') ,
 
     # Admin
     path('wardDetails', views.wardDetails, name='wardDetails') ,
