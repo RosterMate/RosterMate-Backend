@@ -6,8 +6,8 @@ class Scheduler:
         self.shift_types = shift_types          # shift types in the respective ward
         self.num_doctors = num_doctors          # number of doctors need per each shift
         self.consecutive_shifts = consecutive_shifts
-        self.year = int(year)       # int
-        self.month = int(month)     # int
+        self.year = int(year)
+        self.month = int(month)
         self.assignment = {}        # assignment = {doctor id: [(date, shift), (date, shift), ...], ...}
 
     def is_a_leave(self, date1, shift, date2, leaves):
